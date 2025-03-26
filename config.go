@@ -20,14 +20,18 @@ type ProviderConfig struct {
 
 // Config contains the configuration for the token tracker
 type Config struct {
-	Providers map[string]ProviderConfig
-	mu        sync.RWMutex
+	Providers          map[string]ProviderConfig
+	AutoUpdatePricing  bool
+	UsageLogEnabled    bool
+	usageLogPath       string
+	pricingUpdateTimer *time.Timer
+	mu                 sync.RWMutex
 }
 
 // NewConfig creates a new configuration with default values
 func NewConfig() *Config {
 	return &Config{
-		Providers: map[string]ProviderConfig{
+		Providers:         map[string]ProviderConfig{
 			"openai": {
 				Models: map[string]ModelPricing{
 					"gpt-3.5-turbo": {
