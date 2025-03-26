@@ -3,21 +3,33 @@ package providers
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+	"sync"
 	"unicode/utf8"
 
+	"github.com/pkg/errors"
 	"github.com/TrustSight-io/tokentracker"
 )
 
 // ClaudeProvider implements the Provider interface for Claude models
 type ClaudeProvider struct {
-	config *tokentracker.Config
+	config    *tokentracker.Config
+	sdkClient interface{}
+	modelInfo map[string]interface{}
+	mu        sync.RWMutex
 }
 
 // NewClaudeProvider creates a new Claude provider
 func NewClaudeProvider(config *tokentracker.Config) *ClaudeProvider {
-	return &ClaudeProvider{
-		config: config,
+	provider := &ClaudeProvider{
+		config:    config,
+		modelInfo: make(map[string]interface{}),
 	}
+
+	// Initialize with default model info
+	provider.initializeModelInfo()
+
+	return provider
 }
 
 // Name returns the provider name
@@ -89,6 +101,93 @@ func (p *ClaudeProvider) CalculatePrice(model string, inputTokens, outputTokens 
 	}, nil
 }
 
+// SetSDKClient sets the provider-specific SDK client
+func (p *ClaudeProvider) SetSDKClient(client interface{}) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.sdkClient = client
+}
+
+// GetModelInfo returns information about a specific model
+func (p *ClaudeProvider) GetModelInfo(model string) (interface{}, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	info, exists := p.modelInfo[model]
+	if !exists {
+		return nil, tokentracker.NewError(tokentracker.ErrInvalidModel, fmt.Sprintf("model info not found for: %s", model), nil)
+	}
+
+	return info, nil
+}
+
+// ExtractTokenUsageFromResponse extracts token usage from a provider response
+func (p *ClaudeProvider) ExtractTokenUsageFromResponse(response interface{}) (tokentracker.TokenCount, error) {
+	// Check if response is nil
+	if response == nil {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "response is nil", nil)
+	}
+
+	// Try to cast to map[string]interface{} which is common for JSON responses
+	respMap, ok := response.(map[string]interface{})
+	if !ok {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "response is not a map", nil)
+	}
+
+	// Extract usage information from the response
+	// The exact structure depends on the Anthropic API response format
+	usage, ok := respMap["usage"].(map[string]interface{})
+	if !ok {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "usage information not found in response", nil)
+	}
+
+	// Extract token counts
+	inputTokens, ok1 := usage["input_tokens"].(float64)
+	outputTokens, ok2 := usage["output_tokens"].(float64)
+
+	if !ok1 || !ok2 {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "token counts not found in response", nil)
+	}
+
+	return tokentracker.TokenCount{
+		InputTokens:    int(inputTokens),
+		ResponseTokens: int(outputTokens),
+		TotalTokens:    int(inputTokens) + int(outputTokens),
+	}, nil
+}
+
+// UpdatePricing updates the pricing information for this provider
+func (p *ClaudeProvider) UpdatePricing() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	// If we have an SDK client, we could use it to fetch the latest pricing
+	// For now, we'll just update with hardcoded values
+	
+	// Claude 3 Haiku pricing (as of March 2024)
+	p.config.SetModelPricing("anthropic", "claude-3-haiku", tokentracker.ModelPricing{
+		InputPricePerToken:  0.00000025,
+		OutputPricePerToken: 0.00000125,
+		Currency:            "USD",
+	})
+
+	// Claude 3 Sonnet pricing
+	p.config.SetModelPricing("anthropic", "claude-3-sonnet", tokentracker.ModelPricing{
+		InputPricePerToken:  0.000003,
+		OutputPricePerToken: 0.000015,
+		Currency:            "USD",
+	})
+
+	// Claude 3 Opus pricing
+	p.config.SetModelPricing("anthropic", "claude-3-opus", tokentracker.ModelPricing{
+		InputPricePerToken:  0.000015,
+		OutputPricePerToken: 0.000075,
+		Currency:            "USD",
+	})
+
+	return nil
+}
+
 // approximateTokenCount provides an approximate token count for Claude models
 // This is a simplified implementation and should be replaced with Anthropic's official tokenizer
 func (p *ClaudeProvider) approximateTokenCount(text string) int {
@@ -147,7 +246,33 @@ func (p *ClaudeProvider) countMessageTokens(messages []tokentracker.Message, too
 
 // estimateResponseTokens estimates the number of response tokens
 func (p *ClaudeProvider) estimateResponseTokens(model string, inputTokens int) int {
-	return tokentracker.EstimateResponseTokens(model, inputTokens)
+	// This is a simplified estimation based on the model
+	switch {
+	case strings.Contains(model, "opus"):
+		return inputTokens * 2 // Claude Opus can be quite verbose
+	case strings.Contains(model, "sonnet"):
+		return inputTokens * 3 / 2 // Claude Sonnet is moderately verbose
+	case strings.Contains(model, "haiku"):
+		return inputTokens // Claude Haiku is more concise
+	default:
+		return tokentracker.EstimateResponseTokens(model, inputTokens)
+	}
 }
 
-// Note: We can add a helper function here if needed for Claude-specific functionality
+// initializeModelInfo initializes the model information
+func (p *ClaudeProvider) initializeModelInfo() {
+	p.modelInfo["claude-3-haiku"] = map[string]interface{}{
+		"contextWindow": 200000,
+		"description":   "Claude 3 Haiku - fastest and most compact model",
+	}
+
+	p.modelInfo["claude-3-sonnet"] = map[string]interface{}{
+		"contextWindow": 200000,
+		"description":   "Claude 3 Sonnet - balanced performance and intelligence",
+	}
+
+	p.modelInfo["claude-3-opus"] = map[string]interface{}{
+		"contextWindow": 200000,
+		"description":   "Claude 3 Opus - most powerful model for complex tasks",
+	}
+}
