@@ -7,7 +7,6 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/pkg/errors"
 	"github.com/TrustSight-io/tokentracker"
 )
 
