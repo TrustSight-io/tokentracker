@@ -144,3 +144,76 @@ func (c *Config) SetModelPricing(provider, model string, pricing ModelPricing) {
 
 	providerConfig.Models[model] = pricing
 }
+
+// EnableAutomaticPricingUpdates enables automatic pricing updates at the specified interval
+func (c *Config) EnableAutomaticPricingUpdates(interval time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.AutoUpdatePricing = true
+
+	// Stop existing timer if any
+	if c.pricingUpdateTimer != nil {
+		c.pricingUpdateTimer.Stop()
+	}
+
+	// Create a new timer that will trigger pricing updates
+	c.pricingUpdateTimer = time.AfterFunc(interval, func() {
+		// This function will be called when the timer expires
+		// It should trigger a pricing update and then reset the timer
+		
+		// Note: In a real implementation, this would call a method on TokenTracker
+		// to update all pricing. Since we don't have direct access to TokenTracker here,
+		// this is just a placeholder.
+		
+		// Reset the timer for the next interval
+		c.pricingUpdateTimer.Reset(interval)
+	})
+}
+
+// DisableAutomaticPricingUpdates disables automatic pricing updates
+func (c *Config) DisableAutomaticPricingUpdates() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.AutoUpdatePricing = false
+
+	// Stop the timer if it exists
+	if c.pricingUpdateTimer != nil {
+		c.pricingUpdateTimer.Stop()
+		c.pricingUpdateTimer = nil
+	}
+}
+
+// EnableUsageLogging enables logging of token usage to the specified file path
+func (c *Config) EnableUsageLogging(path string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Validate that the path is writable
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	file.Close()
+
+	c.UsageLogEnabled = true
+	c.usageLogPath = path
+	return nil
+}
+
+// DisableUsageLogging disables logging of token usage
+func (c *Config) DisableUsageLogging() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.UsageLogEnabled = false
+}
+
+// GetUsageLogPath returns the path to the usage log file
+func (c *Config) GetUsageLogPath() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	
+	return c.usageLogPath
+}
