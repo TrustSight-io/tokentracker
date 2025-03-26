@@ -170,6 +170,100 @@ if err != nil {
 - Image token counting is simplified and may not be accurate for all use cases.
 - Tool calls token counting is approximate and may need adjustments based on actual usage.
 
+## SDK Integration
+
+The token tracker provides integration with official LLM SDK clients through the `SDKClientWrapper` interface. This allows you to easily track token usage and costs for API calls made with official SDKs.
+
+### Registering SDK Clients
+
+```go
+// Create a new configuration and token tracker
+config := tokentracker.NewConfig()
+tracker := tokentracker.NewTokenTracker(config)
+
+// Register providers
+claudeProvider := providers.NewClaudeProvider(config)
+tracker.RegisterProvider(claudeProvider)
+
+// Create an Anthropic SDK wrapper with your API key
+anthropicWrapper := sdkwrappers.NewAnthropicSDKWrapper("your-api-key", claudeProvider)
+
+// Register the SDK client with the token tracker
+err := tracker.RegisterSDKClient(anthropicWrapper)
+if err != nil {
+    log.Fatalf("Failed to register SDK client: %v", err)
+}
+```
+
+### Updating Pricing Information
+
+```go
+// Update pricing information for all providers
+err := tracker.UpdateAllPricing()
+if err != nil {
+    log.Fatalf("Failed to update pricing: %v", err)
+}
+
+// Enable automatic pricing updates every 24 hours
+config.EnableAutomaticPricingUpdates(24 * time.Hour)
+```
+
+### Tracking Usage from API Responses
+
+```go
+// Make an API call using the SDK client
+client := anthropicWrapper.GetClient()
+resp, err := client.Messages.Create(context.Background(), &anthropic.MessageRequest{
+    Model: sdkwrappers.ClaudeHaiku,
+    MaxTokens: 1000,
+    Messages: []anthropic.Message{
+        {
+            Role: "user",
+            Content: "Explain token counting in LLMs.",
+        },
+    },
+})
+if err != nil {
+    log.Fatalf("API call failed: %v", err)
+}
+
+// Track token usage from the response
+tokenCount, err := tracker.TrackTokenUsage("anthropic", resp)
+if err != nil {
+    log.Fatalf("Failed to track token usage: %v", err)
+}
+
+fmt.Printf("Input tokens: %d\n", tokenCount.InputTokens)
+fmt.Printf("Response tokens: %d\n", tokenCount.ResponseTokens)
+fmt.Printf("Total tokens: %d\n", tokenCount.TotalTokens)
+
+// Get detailed usage metrics including pricing
+metrics, err := anthropicWrapper.TrackAPICall(sdkwrappers.ClaudeHaiku, resp)
+if err != nil {
+    log.Fatalf("Failed to track API call: %v", err)
+}
+
+fmt.Printf("Total cost: $%.6f %s\n", metrics.Price.TotalCost, metrics.Price.Currency)
+```
+
+### Example Usage with OpenAI
+
+```go
+// Register OpenAI provider
+openaiProvider := providers.NewOpenAIProvider(config)
+tracker.RegisterProvider(openaiProvider)
+
+// Create and register OpenAI SDK wrapper
+openaiWrapper := sdkwrappers.NewOpenAISDKWrapper("your-openai-api-key", openaiProvider)
+tracker.RegisterSDKClient(openaiWrapper)
+
+// Enable usage logging
+config.EnableUsageLogging("token_usage.log")
+
+// Make API calls and track usage
+// ...
+```
+
 ## License
 
 MIT
