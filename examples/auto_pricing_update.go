@@ -34,7 +34,7 @@ func main() {
 
 	// Create an Anthropic SDK wrapper
 	// Note: In a real application, you would use your actual API key
-	anthropicWrapper := sdkwrappers.NewAnthropicSDKWrapper("your-api-key-here", claudeProvider)
+	anthropicWrapper := sdkwrappers.NewAnthropicSDKWrapper("your-api-key-here")
 
 	// Register the SDK client with the token tracker
 	err = tracker.RegisterSDKClient(anthropicWrapper)

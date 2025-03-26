@@ -35,6 +35,34 @@ func (p *MockProvider) CalculatePrice(model string, inputTokens, outputTokens in
 	return p.price, nil
 }
 
+// SetSDKClient sets the provider-specific SDK client
+func (p *MockProvider) SetSDKClient(client interface{}) {
+	// No-op for mock
+}
+
+// GetModelInfo returns information about a specific model
+func (p *MockProvider) GetModelInfo(model string) (interface{}, error) {
+	if model != p.supportedModel {
+		return nil, NewError(ErrInvalidModel, "unsupported model", nil)
+	}
+	return map[string]interface{}{
+		"name":     model,
+		"provider": p.name,
+	}, nil
+}
+
+// ExtractTokenUsageFromResponse extracts token usage from a provider response
+func (p *MockProvider) ExtractTokenUsageFromResponse(response interface{}) (TokenCount, error) {
+	// Just return the mock token count for testing
+	return p.tokenCount, nil
+}
+
+// UpdatePricing updates the pricing information for this provider
+func (p *MockProvider) UpdatePricing() error {
+	// No-op for mock
+	return nil
+}
+
 func TestDefaultTokenTracker_CountTokens(t *testing.T) {
 	// Create a new configuration
 	config := NewConfig()
@@ -104,18 +132,16 @@ func TestDefaultTokenTracker_CountTokens(t *testing.T) {
 				t.Errorf("DefaultTokenTracker.CountTokens() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if err != nil {
-				return
-			}
-
-			if got.InputTokens != tt.want.InputTokens {
-				t.Errorf("DefaultTokenTracker.CountTokens() InputTokens = %v, want %v", got.InputTokens, tt.want.InputTokens)
-			}
-			if got.ResponseTokens != tt.want.ResponseTokens {
-				t.Errorf("DefaultTokenTracker.CountTokens() ResponseTokens = %v, want %v", got.ResponseTokens, tt.want.ResponseTokens)
-			}
-			if got.TotalTokens != tt.want.TotalTokens {
-				t.Errorf("DefaultTokenTracker.CountTokens() TotalTokens = %v, want %v", got.TotalTokens, tt.want.TotalTokens)
+			if !tt.wantErr {
+				if got.InputTokens != tt.want.InputTokens {
+					t.Errorf("DefaultTokenTracker.CountTokens() InputTokens = %v, want %v", got.InputTokens, tt.want.InputTokens)
+				}
+				if got.ResponseTokens != tt.want.ResponseTokens {
+					t.Errorf("DefaultTokenTracker.CountTokens() ResponseTokens = %v, want %v", got.ResponseTokens, tt.want.ResponseTokens)
+				}
+				if got.TotalTokens != tt.want.TotalTokens {
+					t.Errorf("DefaultTokenTracker.CountTokens() TotalTokens = %v, want %v", got.TotalTokens, tt.want.TotalTokens)
+				}
 			}
 		})
 	}
@@ -148,31 +174,31 @@ func TestDefaultTokenTracker_CalculatePrice(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name         string
-		model        string
-		inputTokens  int
+		name        string
+		model       string
+		inputTokens int
 		outputTokens int
-		want         Price
-		wantErr      bool
+		want        Price
+		wantErr     bool
 	}{
 		{
-			name:         "Empty model",
-			model:        "",
-			inputTokens:  100,
+			name:        "Empty model",
+			model:       "",
+			inputTokens: 100,
 			outputTokens: 50,
-			wantErr:      true,
+			wantErr:     true,
 		},
 		{
-			name:         "Unsupported model",
-			model:        "unsupported-model",
-			inputTokens:  100,
+			name:        "Unsupported model",
+			model:       "unsupported-model",
+			inputTokens: 100,
 			outputTokens: 50,
-			wantErr:      true,
+			wantErr:     true,
 		},
 		{
-			name:         "Supported model",
-			model:        "mock-model",
-			inputTokens:  100,
+			name:        "Supported model",
+			model:       "mock-model",
+			inputTokens: 100,
 			outputTokens: 50,
 			want: Price{
 				InputCost:  0.0001,
@@ -191,21 +217,19 @@ func TestDefaultTokenTracker_CalculatePrice(t *testing.T) {
 				t.Errorf("DefaultTokenTracker.CalculatePrice() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if err != nil {
-				return
-			}
-
-			if got.InputCost != tt.want.InputCost {
-				t.Errorf("DefaultTokenTracker.CalculatePrice() InputCost = %v, want %v", got.InputCost, tt.want.InputCost)
-			}
-			if got.OutputCost != tt.want.OutputCost {
-				t.Errorf("DefaultTokenTracker.CalculatePrice() OutputCost = %v, want %v", got.OutputCost, tt.want.OutputCost)
-			}
-			if got.TotalCost != tt.want.TotalCost {
-				t.Errorf("DefaultTokenTracker.CalculatePrice() TotalCost = %v, want %v", got.TotalCost, tt.want.TotalCost)
-			}
-			if got.Currency != tt.want.Currency {
-				t.Errorf("DefaultTokenTracker.CalculatePrice() Currency = %v, want %v", got.Currency, tt.want.Currency)
+			if !tt.wantErr {
+				if got.InputCost != tt.want.InputCost {
+					t.Errorf("DefaultTokenTracker.CalculatePrice() InputCost = %v, want %v", got.InputCost, tt.want.InputCost)
+				}
+				if got.OutputCost != tt.want.OutputCost {
+					t.Errorf("DefaultTokenTracker.CalculatePrice() OutputCost = %v, want %v", got.OutputCost, tt.want.OutputCost)
+				}
+				if got.TotalCost != tt.want.TotalCost {
+					t.Errorf("DefaultTokenTracker.CalculatePrice() TotalCost = %v, want %v", got.TotalCost, tt.want.TotalCost)
+				}
+				if got.Currency != tt.want.Currency {
+					t.Errorf("DefaultTokenTracker.CalculatePrice() Currency = %v, want %v", got.Currency, tt.want.Currency)
+				}
 			}
 		})
 	}
@@ -250,9 +274,9 @@ func TestDefaultTokenTracker_TrackUsage(t *testing.T) {
 				Params: TokenCountParams{
 					Text: stringPtr("Test text"),
 				},
-				StartTime: time.Now(),
+				StartTime: time.Now().Add(-1 * time.Second),
 			},
-			response: nil,
+			response: "Test response",
 			wantErr:  true,
 		},
 		{
@@ -263,9 +287,9 @@ func TestDefaultTokenTracker_TrackUsage(t *testing.T) {
 					Model: "unsupported-model",
 					Text:  stringPtr("Test text"),
 				},
-				StartTime: time.Now(),
+				StartTime: time.Now().Add(-1 * time.Second),
 			},
-			response: nil,
+			response: "Test response",
 			wantErr:  true,
 		},
 		{
@@ -276,9 +300,9 @@ func TestDefaultTokenTracker_TrackUsage(t *testing.T) {
 					Model: "mock-model",
 					Text:  stringPtr("Test text"),
 				},
-				StartTime: time.Now().Add(-time.Second),
+				StartTime: time.Now().Add(-1 * time.Second),
 			},
-			response: nil,
+			response: "Test response",
 			wantErr:  false,
 		},
 	}
@@ -290,22 +314,19 @@ func TestDefaultTokenTracker_TrackUsage(t *testing.T) {
 				t.Errorf("DefaultTokenTracker.TrackUsage() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if err != nil {
-				return
-			}
-
-			// Check that the usage metrics are populated correctly
-			if got.TokenCount.InputTokens != mockProvider.tokenCount.InputTokens {
-				t.Errorf("DefaultTokenTracker.TrackUsage() InputTokens = %v, want %v", got.TokenCount.InputTokens, mockProvider.tokenCount.InputTokens)
-			}
-			if got.Price.TotalCost != mockProvider.price.TotalCost {
-				t.Errorf("DefaultTokenTracker.TrackUsage() TotalCost = %v, want %v", got.Price.TotalCost, mockProvider.price.TotalCost)
-			}
-			if got.Provider != mockProvider.name {
-				t.Errorf("DefaultTokenTracker.TrackUsage() Provider = %v, want %v", got.Provider, mockProvider.name)
-			}
-			if got.Duration < time.Second {
-				t.Errorf("DefaultTokenTracker.TrackUsage() Duration = %v, want at least 1s", got.Duration)
+			if !tt.wantErr {
+				if got.TokenCount.InputTokens != mockProvider.tokenCount.InputTokens {
+					t.Errorf("DefaultTokenTracker.TrackUsage() InputTokens = %v, want %v", got.TokenCount.InputTokens, mockProvider.tokenCount.InputTokens)
+				}
+				if got.Price.TotalCost != mockProvider.price.TotalCost {
+					t.Errorf("DefaultTokenTracker.TrackUsage() TotalCost = %v, want %v", got.Price.TotalCost, mockProvider.price.TotalCost)
+				}
+				if got.Provider != mockProvider.name {
+					t.Errorf("DefaultTokenTracker.TrackUsage() Provider = %v, want %v", got.Provider, mockProvider.name)
+				}
+				if got.Duration < time.Second {
+					t.Errorf("DefaultTokenTracker.TrackUsage() Duration = %v, want at least 1s", got.Duration)
+				}
 			}
 		})
 	}

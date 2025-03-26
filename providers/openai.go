@@ -50,20 +50,20 @@ func (p *OpenAIProvider) CountTokens(params tokentracker.TokenCountParams) (toke
 	// Get the encoding for the model
 	encoding, err := p.getEncoding(params.Model)
 	if err != nil {
-		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to get encoding", err)
+		return tokentracker.TokenCount{}, err
 	}
 
 	var inputTokens int
 
-	// Count tokens based on input type
+	// Count tokens based on the input type
 	if params.Text != nil {
 		// Count tokens for text
 		inputTokens = len(encoding.Encode(*params.Text, nil, nil))
 	} else if len(params.Messages) > 0 {
-		// Count tokens for messages
-		inputTokens, err = p.countMessageTokens(encoding, params.Messages, params.Tools, params.ToolChoice)
+		// Count tokens for chat messages
+		inputTokens, err = p.countMessageTokens(params.Model, params.Messages, params.Tools, params.ToolChoice, encoding)
 		if err != nil {
-			return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to count message tokens", err)
+			return tokentracker.TokenCount{}, err
 		}
 	} else {
 		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "either text or messages must be provided", nil)
@@ -72,7 +72,6 @@ func (p *OpenAIProvider) CountTokens(params tokentracker.TokenCountParams) (toke
 	// Estimate response tokens if requested
 	var responseTokens int
 	if params.CountResponseTokens {
-		// This is a simplified estimation
 		responseTokens = p.estimateResponseTokens(params.Model, inputTokens)
 	}
 
@@ -85,118 +84,164 @@ func (p *OpenAIProvider) CountTokens(params tokentracker.TokenCountParams) (toke
 
 // CalculatePrice calculates price based on token usage
 func (p *OpenAIProvider) CalculatePrice(model string, inputTokens, outputTokens int) (tokentracker.Price, error) {
+	if model == "" {
+		return tokentracker.Price{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "model is required", nil)
+	}
+
+	// Get pricing information for the model
 	pricing, exists := p.config.GetModelPricing("openai", model)
 	if !exists {
 		return tokentracker.Price{}, tokentracker.NewError(tokentracker.ErrPricingNotFound, fmt.Sprintf("pricing not found for model: %s", model), nil)
 	}
 
+	// Calculate costs
 	inputCost := float64(inputTokens) * pricing.InputPricePerToken
 	outputCost := float64(outputTokens) * pricing.OutputPricePerToken
+	totalCost := inputCost + outputCost
 
 	return tokentracker.Price{
 		InputCost:  inputCost,
 		OutputCost: outputCost,
-		TotalCost:  inputCost + outputCost,
+		TotalCost:  totalCost,
 		Currency:   pricing.Currency,
 	}, nil
 }
 
-// getEncoding returns the tiktoken encoding for the given model
-func (p *OpenAIProvider) getEncoding(model string) (*tiktoken.Tiktoken, error) {
-	var encodingName string
+// SetSDKClient sets the provider-specific SDK client
+func (p *OpenAIProvider) SetSDKClient(client interface{}) {
+	// Store the client for later use
+	// In a real implementation, this would be used to make API calls
+}
 
-	// Determine the encoding name based on the model
-	switch {
-	case model == "text-embedding-ada":
-		encodingName = "cl100k_base"
-	case model == "gpt-3.5-turbo" || model == "gpt-3.5-turbo-16k":
-		encodingName = "cl100k_base"
-	case model == "gpt-4" || model == "gpt-4-32k" || model == "gpt-4-turbo" || model == "gpt-4o":
-		encodingName = "cl100k_base"
-	default:
-		// Default to cl100k_base for unknown models
-		encodingName = "cl100k_base"
+// GetModelInfo returns information about a specific model
+func (p *OpenAIProvider) GetModelInfo(model string) (interface{}, error) {
+	// In a real implementation, this would return model information
+	// For now, we'll just return a simple map
+	return map[string]interface{}{
+		"name":         model,
+		"provider":     "openai",
+		"capabilities": []string{"text", "chat", "function-calling"},
+	}, nil
+}
+
+// ExtractTokenUsageFromResponse extracts token usage from a provider response
+func (p *OpenAIProvider) ExtractTokenUsageFromResponse(response interface{}) (tokentracker.TokenCount, error) {
+	// Check if response is nil
+	if response == nil {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "response is nil", nil)
 	}
 
+	// Try to cast to map[string]interface{} which is common for JSON responses
+	respMap, ok := response.(map[string]interface{})
+	if !ok {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "response is not a map", nil)
+	}
+
+	// Extract usage information from the response
+	usage, ok := respMap["usage"].(map[string]interface{})
+	if !ok {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "usage information not found in response", nil)
+	}
+
+	// Extract token counts
+	promptTokens, ok1 := usage["prompt_tokens"].(float64)
+	completionTokens, ok2 := usage["completion_tokens"].(float64)
+	totalTokens, ok3 := usage["total_tokens"].(float64)
+
+	if !ok1 || !ok2 || !ok3 {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "token counts not found in response", nil)
+	}
+
+	return tokentracker.TokenCount{
+		InputTokens:    int(promptTokens),
+		ResponseTokens: int(completionTokens),
+		TotalTokens:    int(totalTokens),
+	}, nil
+}
+
+// UpdatePricing updates the pricing information for this provider
+func (p *OpenAIProvider) UpdatePricing() error {
+	// If we have an SDK client, we could use it to fetch the latest pricing
+	// For now, we'll just update with hardcoded values
+	
+	// GPT-3.5 Turbo pricing (as of March 2024)
+	p.config.SetModelPricing("openai", "gpt-3.5-turbo", tokentracker.ModelPricing{
+		InputPricePerToken:  0.0000015,
+		OutputPricePerToken: 0.000002,
+		Currency:            "USD",
+	})
+	
+	// GPT-4 pricing (as of March 2024)
+	p.config.SetModelPricing("openai", "gpt-4", tokentracker.ModelPricing{
+		InputPricePerToken:  0.00003,
+		OutputPricePerToken: 0.00006,
+		Currency:            "USD",
+	})
+	
+	// GPT-4 Turbo pricing (as of March 2024)
+	p.config.SetModelPricing("openai", "gpt-4-turbo", tokentracker.ModelPricing{
+		InputPricePerToken:  0.00001,
+		OutputPricePerToken: 0.00003,
+		Currency:            "USD",
+	})
+	
+	return nil
+}
+
+// getEncoding returns the encoding for the given model
+func (p *OpenAIProvider) getEncoding(model string) (*tiktoken.Tiktoken, error) {
+	// Map model to encoding
+	encodingName := "cl100k_base" // Default for most newer models
+	
+	// Override for specific models if needed
+	if model == "text-embedding-ada" {
+		encodingName = "r50k_base"
+	}
+	
+	// Get the encoding
 	encoding, err := tiktoken.GetEncoding(encodingName)
 	if err != nil {
-		return nil, err
+		return nil, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to get encoding", err)
 	}
-
+	
 	return encoding, nil
 }
 
 // countMessageTokens counts tokens for chat messages
-// Implementation based on OpenAI's token counting logic
-func (p *OpenAIProvider) countMessageTokens(encoding *tiktoken.Tiktoken, messages []tokentracker.Message, tools []tokentracker.Tool, toolChoice *tokentracker.ToolChoice) (int, error) {
-	// Base tokens for the messages format
-	tokens := 3 // Every reply is primed with <|start|>assistant<|message|>
-
-	// Count tokens for each message
-	for _, message := range messages {
-		// Add tokens for message role
-		tokens += 4 // Every message follows <|start|>{role}<|message|>
-
-		// Count tokens for content
-		switch content := message.Content.(type) {
-		case string:
-			tokens += len(encoding.Encode(content, nil, nil))
-		case []tokentracker.ContentPart:
-			for _, part := range content {
-				if part.Type == "text" {
-					tokens += len(encoding.Encode(part.Text, nil, nil))
-				} else if part.Type == "image" {
-					// Simplified image token counting
-					// This is a placeholder and should be replaced with actual image token counting logic
-					tokens += 1000 // Placeholder value
-				}
-			}
-		case []interface{}:
-			// Handle array of content parts from JSON
-			for _, partInterface := range content {
-				if part, ok := partInterface.(map[string]interface{}); ok {
-					if partType, ok := part["type"].(string); ok {
-						if partType == "text" {
-							if text, ok := part["text"].(string); ok {
-								tokens += len(encoding.Encode(text, nil, nil))
-							}
-						} else if partType == "image" {
-							// Simplified image token counting
-							tokens += 1000 // Placeholder value
-						}
-					}
-				}
-			}
-		default:
-			// Try to handle as JSON
-			contentBytes, err := json.Marshal(content)
-			if err == nil {
-				tokens += len(encoding.Encode(string(contentBytes), nil, nil))
-			}
-		}
+func (p *OpenAIProvider) countMessageTokens(model string, messages []tokentracker.Message, tools []tokentracker.Tool, toolChoice *tokentracker.ToolChoice, encoding *tiktoken.Tiktoken) (int, error) {
+	// Convert messages to JSON for token counting
+	messagesJSON, err := json.Marshal(messages)
+	if err != nil {
+		return 0, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to marshal messages", err)
 	}
-
-	// Count tokens for tools if provided
+	
+	// Count tokens in the messages JSON
+	tokens := len(encoding.Encode(string(messagesJSON), nil, nil))
+	
+	// Add tokens for tools if present
 	if len(tools) > 0 {
-		// Convert tools to JSON for token counting
 		toolsJSON, err := json.Marshal(tools)
-		if err == nil {
-			tokens += len(encoding.Encode(string(toolsJSON), nil, nil))
+		if err != nil {
+			return 0, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to marshal tools", err)
 		}
-
-		// Add base tokens for tools
-		tokens += 10 // Placeholder value
+		
+		tokens += len(encoding.Encode(string(toolsJSON), nil, nil))
 	}
-
-	// Count tokens for tool choice if provided
+	
+	// Add tokens for tool choice if present
 	if toolChoice != nil {
-		// Convert tool choice to JSON for token counting
 		toolChoiceJSON, err := json.Marshal(toolChoice)
-		if err == nil {
-			tokens += len(encoding.Encode(string(toolChoiceJSON), nil, nil))
+		if err != nil {
+			return 0, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to marshal tool choice", err)
 		}
+		
+		tokens += len(encoding.Encode(string(toolChoiceJSON), nil, nil))
 	}
-
+	
+	// Add tokens for message formatting
+	// This is a simplified approach; a real implementation would be more precise
+	tokens += 3 // For the message format
+	
 	return tokens, nil
 }
 

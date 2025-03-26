@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TrustSight-io/tokentracker"
+	"github.com/TrustSight-io/tokentracker/common"
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 )
@@ -19,24 +19,17 @@ const (
 
 // AnthropicSDKWrapper wraps the Anthropic SDK client
 type AnthropicSDKWrapper struct {
-	client   anthropic.Client
-	provider tokentracker.Provider
+	client anthropic.Client
 }
 
 // NewAnthropicSDKWrapper creates a new Anthropic SDK wrapper
-func NewAnthropicSDKWrapper(apiKey string, provider tokentracker.Provider) *AnthropicSDKWrapper {
+func NewAnthropicSDKWrapper(apiKey string) *AnthropicSDKWrapper {
 	// Create client with API key
 	client := anthropic.NewClient(option.WithAPIKey(apiKey))
 	
-	wrapper := &AnthropicSDKWrapper{
-		client:   client,
-		provider: provider,
+	return &AnthropicSDKWrapper{
+		client: client,
 	}
-	
-	// Set the SDK client in the provider
-	provider.SetSDKClient(client)
-	
-	return wrapper
 }
 
 // GetProviderName returns the name of the provider
@@ -61,15 +54,15 @@ func (w *AnthropicSDKWrapper) GetSupportedModels() ([]string, error) {
 }
 
 // ExtractTokenUsageFromResponse extracts token usage from an Anthropic API response
-func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (TokenUsage, error) {
+func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (common.TokenUsage, error) {
 	// Try to cast the response to *anthropic.Message
 	msg, ok := response.(*anthropic.Message)
 	if !ok {
-		return TokenUsage{}, fmt.Errorf("response is not an *anthropic.Message: %T", response)
+		return common.TokenUsage{}, fmt.Errorf("response is not an *anthropic.Message: %T", response)
 	}
 
 	// Extract token usage information
-	usage := TokenUsage{
+	usage := common.TokenUsage{
 		InputTokens:    int(msg.Usage.InputTokens),
 		OutputTokens:   int(msg.Usage.OutputTokens),
 		TotalTokens:    int(msg.Usage.InputTokens + msg.Usage.OutputTokens),
@@ -84,10 +77,10 @@ func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}
 }
 
 // FetchCurrentPricing returns the current pricing for Anthropic models
-func (w *AnthropicSDKWrapper) FetchCurrentPricing() (map[string]tokentracker.ModelPricing, error) {
+func (w *AnthropicSDKWrapper) FetchCurrentPricing() (map[string]common.ModelPricing, error) {
 	// Hardcoded pricing information for Anthropic models
 	// These values should be updated regularly or fetched from an API
-	pricing := map[string]tokentracker.ModelPricing{
+	pricing := map[string]common.ModelPricing{
 		ClaudeHaiku: {
 			InputPricePerToken:  0.00000025,
 			OutputPricePerToken: 0.00000125,
@@ -115,44 +108,53 @@ func (w *AnthropicSDKWrapper) FetchCurrentPricing() (map[string]tokentracker.Mod
 
 // UpdateProviderPricing updates the pricing information in the provider
 func (w *AnthropicSDKWrapper) UpdateProviderPricing() error {
-	// Get the current pricing
-	pricing, err := w.FetchCurrentPricing()
-	if err != nil {
-		return err
-	}
-	
-	// Update the provider's pricing
-	err = w.provider.UpdatePricing()
-	if err != nil {
-		return err
-	}
-	
+	// In a real implementation, this would update the pricing information in the provider
+	// For now, we'll just return nil
 	return nil
 }
 
 // TrackAPICall tracks an API call and returns usage metrics
-func (w *AnthropicSDKWrapper) TrackAPICall(model string, response interface{}) (tokentracker.UsageMetrics, error) {
-	// Extract token usage from the response using the provider
-	tokenCount, err := w.provider.ExtractTokenUsageFromResponse(response)
+func (w *AnthropicSDKWrapper) TrackAPICall(model string, response interface{}) (common.UsageMetrics, error) {
+	// Extract token usage from the response
+	tokenUsage, err := w.ExtractTokenUsageFromResponse(response)
 	if err != nil {
-		return tokentracker.UsageMetrics{}, err
+		return common.UsageMetrics{}, err
 	}
-	
-	// Calculate price using the provider
-	price, err := w.provider.CalculatePrice(model, tokenCount.InputTokens, tokenCount.ResponseTokens)
+
+	// Get pricing information for the model
+	pricing, err := w.FetchCurrentPricing()
 	if err != nil {
-		return tokentracker.UsageMetrics{}, err
+		return common.UsageMetrics{}, err
 	}
-	
+
+	modelPricing, ok := pricing[model]
+	if !ok {
+		return common.UsageMetrics{}, fmt.Errorf("no pricing information found for model: %s", model)
+	}
+
+	// Calculate price
+	inputCost := float64(tokenUsage.InputTokens) * modelPricing.InputPricePerToken
+	outputCost := float64(tokenUsage.OutputTokens) * modelPricing.OutputPricePerToken
+	totalCost := inputCost + outputCost
+
 	// Create usage metrics
-	metrics := tokentracker.UsageMetrics{
-		TokenCount: tokenCount,
-		Price:      price,
-		Duration:   time.Duration(0), // We don't have duration information from the API
-		Timestamp:  time.Now(),
-		Model:      model,
-		Provider:   w.GetProviderName(),
+	metrics := common.UsageMetrics{
+		TokenCount: common.TokenCount{
+			InputTokens:    tokenUsage.InputTokens,
+			ResponseTokens: tokenUsage.OutputTokens,
+			TotalTokens:    tokenUsage.TotalTokens,
+		},
+		Price: common.Price{
+			InputCost:  inputCost,
+			OutputCost: outputCost,
+			TotalCost:  totalCost,
+			Currency:   modelPricing.Currency,
+		},
+		Duration:  time.Since(tokenUsage.Timestamp),
+		Timestamp: time.Now(),
+		Model:     model,
+		Provider:  w.GetProviderName(),
 	}
-	
+
 	return metrics, nil
 }

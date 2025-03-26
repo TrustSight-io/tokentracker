@@ -2,23 +2,8 @@
 package sdkwrappers
 
 import (
-	"time"
-
-	"github.com/TrustSight-io/tokentracker"
+	"github.com/TrustSight-io/tokentracker/common"
 )
-
-// TokenUsage represents token usage information extracted from API responses
-type TokenUsage struct {
-	InputTokens    int
-	OutputTokens   int
-	TotalTokens    int
-	CompletionID   string
-	Model          string
-	Timestamp      time.Time
-	PromptTokens   int    // Some APIs use "prompt" instead of "input"
-	ResponseTokens int    // Some APIs use "response" instead of "output"
-	RequestID      string // Some APIs provide a request ID
-}
 
 // SDKClientWrapper defines the interface for wrapping official LLM SDK clients
 type SDKClientWrapper interface {
@@ -32,14 +17,14 @@ type SDKClientWrapper interface {
 	GetSupportedModels() ([]string, error)
 
 	// ExtractTokenUsageFromResponse extracts token usage information from an API response
-	ExtractTokenUsageFromResponse(response interface{}) (TokenUsage, error)
+	ExtractTokenUsageFromResponse(response interface{}) (common.TokenUsage, error)
 
 	// FetchCurrentPricing fetches the current pricing information for all supported models
-	FetchCurrentPricing() (map[string]tokentracker.ModelPricing, error)
+	FetchCurrentPricing() (map[string]common.ModelPricing, error)
 	
 	// UpdateProviderPricing updates the pricing information in the provider
 	UpdateProviderPricing() error
 	
 	// TrackAPICall tracks an API call and returns usage metrics
-	TrackAPICall(model string, response interface{}) (tokentracker.UsageMetrics, error)
+	TrackAPICall(model string, response interface{}) (common.UsageMetrics, error)
 }

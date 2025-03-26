@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TrustSight-io/tokentracker"
+	"github.com/TrustSight-io/tokentracker/common"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 )
@@ -56,15 +56,15 @@ func (w *OpenAISDKWrapper) GetSupportedModels() ([]string, error) {
 }
 
 // ExtractTokenUsageFromResponse extracts token usage from an OpenAI API response
-func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (TokenUsage, error) {
+func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (common.TokenUsage, error) {
 	// Try to cast the response to *openai.ChatCompletion
 	resp, ok := response.(*openai.ChatCompletion)
 	if !ok {
-		return TokenUsage{}, fmt.Errorf("response is not a *openai.ChatCompletion: %T", response)
+		return common.TokenUsage{}, fmt.Errorf("response is not a *openai.ChatCompletion: %T", response)
 	}
 
 	// Extract token usage information
-	usage := TokenUsage{
+	usage := common.TokenUsage{
 		InputTokens:    int(resp.Usage.PromptTokens),
 		OutputTokens:   int(resp.Usage.CompletionTokens),
 		TotalTokens:    int(resp.Usage.TotalTokens),
@@ -80,10 +80,10 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 }
 
 // FetchCurrentPricing returns the current pricing for OpenAI models
-func (w *OpenAISDKWrapper) FetchCurrentPricing() (map[string]tokentracker.ModelPricing, error) {
+func (w *OpenAISDKWrapper) FetchCurrentPricing() (map[string]common.ModelPricing, error) {
 	// Hardcoded pricing information for OpenAI models
 	// These values should be updated regularly or fetched from an API
-	pricing := map[string]tokentracker.ModelPricing{
+	pricing := map[string]common.ModelPricing{
 		GPT35Turbo: {
 			InputPricePerToken:  0.0000015,
 			OutputPricePerToken: 0.000002,
@@ -112,4 +112,57 @@ func (w *OpenAISDKWrapper) FetchCurrentPricing() (map[string]tokentracker.ModelP
 	}
 
 	return pricing, nil
+}
+
+// UpdateProviderPricing updates the pricing information in the provider
+func (w *OpenAISDKWrapper) UpdateProviderPricing() error {
+	// In a real implementation, this would update the pricing information in the provider
+	// For now, we'll just return nil
+	return nil
+}
+
+// TrackAPICall tracks an API call and returns usage metrics
+func (w *OpenAISDKWrapper) TrackAPICall(model string, response interface{}) (common.UsageMetrics, error) {
+	// Extract token usage from the response
+	tokenUsage, err := w.ExtractTokenUsageFromResponse(response)
+	if err != nil {
+		return common.UsageMetrics{}, err
+	}
+
+	// Get pricing information for the model
+	pricing, err := w.FetchCurrentPricing()
+	if err != nil {
+		return common.UsageMetrics{}, err
+	}
+
+	modelPricing, ok := pricing[model]
+	if !ok {
+		return common.UsageMetrics{}, fmt.Errorf("no pricing information found for model: %s", model)
+	}
+
+	// Calculate price
+	inputCost := float64(tokenUsage.InputTokens) * modelPricing.InputPricePerToken
+	outputCost := float64(tokenUsage.OutputTokens) * modelPricing.OutputPricePerToken
+	totalCost := inputCost + outputCost
+
+	// Create usage metrics
+	metrics := common.UsageMetrics{
+		TokenCount: common.TokenCount{
+			InputTokens:    tokenUsage.InputTokens,
+			ResponseTokens: tokenUsage.OutputTokens,
+			TotalTokens:    tokenUsage.TotalTokens,
+		},
+		Price: common.Price{
+			InputCost:  inputCost,
+			OutputCost: outputCost,
+			TotalCost:  totalCost,
+			Currency:   modelPricing.Currency,
+		},
+		Duration:  time.Since(tokenUsage.Timestamp),
+		Timestamp: time.Now(),
+		Model:     model,
+		Provider:  w.GetProviderName(),
+	}
+
+	return metrics, nil
 }

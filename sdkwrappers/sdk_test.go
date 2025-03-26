@@ -1,10 +1,11 @@
-package sdkwrappers
+package sdkwrappers_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/TrustSight-io/tokentracker"
+	"github.com/TrustSight-io/tokentracker/common"
+	"github.com/TrustSight-io/tokentracker/sdkwrappers"
 )
 
 // MockResponse is a simple mock response for testing
@@ -20,7 +21,7 @@ type MockResponse struct {
 // MockSDKWrapper is a mock implementation of SDKClientWrapper for testing
 type MockSDKWrapper struct {
 	providerName string
-	pricing      map[string]tokentracker.ModelPricing
+	pricing      map[string]common.ModelPricing
 }
 
 func (m *MockSDKWrapper) GetProviderName() string {
@@ -35,13 +36,13 @@ func (m *MockSDKWrapper) GetSupportedModels() ([]string, error) {
 	return []string{"model-1", "model-2"}, nil
 }
 
-func (m *MockSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (TokenUsage, error) {
+func (m *MockSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (common.TokenUsage, error) {
 	mockResp, ok := response.(*MockResponse)
 	if !ok {
-		return TokenUsage{}, nil
+		return common.TokenUsage{}, nil
 	}
 	
-	return TokenUsage{
+	return common.TokenUsage{
 		InputTokens:    int(mockResp.Usage.InputTokens),
 		OutputTokens:   int(mockResp.Usage.OutputTokens),
 		TotalTokens:    int(mockResp.Usage.InputTokens + mockResp.Usage.OutputTokens),
@@ -53,23 +54,24 @@ func (m *MockSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (To
 	}, nil
 }
 
-func (m *MockSDKWrapper) FetchCurrentPricing() (map[string]tokentracker.ModelPricing, error) {
+func (m *MockSDKWrapper) FetchCurrentPricing() (map[string]common.ModelPricing, error) {
 	return m.pricing, nil
 }
 
+// Additional methods required by the SDKClientWrapper interface
 func (m *MockSDKWrapper) UpdateProviderPricing() error {
 	return nil
 }
 
-func (m *MockSDKWrapper) TrackAPICall(model string, response interface{}) (tokentracker.UsageMetrics, error) {
-	return tokentracker.UsageMetrics{}, nil
+func (m *MockSDKWrapper) TrackAPICall(model string, response interface{}) (common.UsageMetrics, error) {
+	return common.UsageMetrics{}, nil
 }
 
 func TestSDKWrapperInterface(t *testing.T) {
 	// Table-driven tests for different wrappers
 	tests := []struct {
 		name           string
-		wrapper        SDKClientWrapper
+		wrapper        sdkwrappers.SDKClientWrapper
 		expectedName   string
 		mockResponse   *MockResponse
 		expectedInput  int
@@ -79,7 +81,7 @@ func TestSDKWrapperInterface(t *testing.T) {
 			name: "OpenAI Wrapper",
 			wrapper: &MockSDKWrapper{
 				providerName: "openai",
-				pricing: map[string]tokentracker.ModelPricing{
+				pricing: map[string]common.ModelPricing{
 					"gpt-4": {
 						InputPricePerToken:  0.00003,
 						OutputPricePerToken: 0.00006,
@@ -106,7 +108,7 @@ func TestSDKWrapperInterface(t *testing.T) {
 			name: "Anthropic Wrapper",
 			wrapper: &MockSDKWrapper{
 				providerName: "anthropic",
-				pricing: map[string]tokentracker.ModelPricing{
+				pricing: map[string]common.ModelPricing{
 					"claude-3-opus": {
 						InputPricePerToken:  0.00001,
 						OutputPricePerToken: 0.00003,
@@ -133,7 +135,7 @@ func TestSDKWrapperInterface(t *testing.T) {
 			name: "Gemini Wrapper",
 			wrapper: &MockSDKWrapper{
 				providerName: "gemini",
-				pricing: map[string]tokentracker.ModelPricing{
+				pricing: map[string]common.ModelPricing{
 					"gemini-pro": {
 						InputPricePerToken:  0.00000025,
 						OutputPricePerToken: 0.0000005,
@@ -201,78 +203,4 @@ func TestSDKWrapperInterface(t *testing.T) {
 			}
 		})
 	}
-}
-
-// TestAnthropicSDKWrapper tests the actual AnthropicSDKWrapper implementation
-func TestAnthropicSDKWrapper(t *testing.T) {
-	// Skip this test if we don't have a real API key
-	t.Skip("Skipping test that requires a real API key")
-
-	// Create a mock provider
-	provider := &MockProvider{
-		name: "anthropic",
-	}
-
-	// Create a wrapper with a fake API key
-	wrapper := NewAnthropicSDKWrapper("fake-api-key", provider)
-
-	// Test GetProviderName
-	if name := wrapper.GetProviderName(); name != "anthropic" {
-		t.Errorf("GetProviderName() = %v, want %v", name, "anthropic")
-	}
-
-	// Test GetSupportedModels
-	models, err := wrapper.GetSupportedModels()
-	if err != nil {
-		t.Errorf("GetSupportedModels() error = %v", err)
-	}
-	if len(models) == 0 {
-		t.Error("GetSupportedModels() returned empty models list")
-	}
-
-	// Test FetchCurrentPricing
-	pricing, err := wrapper.FetchCurrentPricing()
-	if err != nil {
-		t.Errorf("FetchCurrentPricing() error = %v", err)
-	}
-	if len(pricing) == 0 {
-		t.Error("FetchCurrentPricing() returned empty pricing map")
-	}
-}
-
-// MockProvider is a mock implementation of the Provider interface for testing
-type MockProvider struct {
-	name string
-}
-
-func (p *MockProvider) Name() string {
-	return p.name
-}
-
-func (p *MockProvider) CountTokens(params tokentracker.TokenCountParams) (tokentracker.TokenCount, error) {
-	return tokentracker.TokenCount{}, nil
-}
-
-func (p *MockProvider) CalculatePrice(model string, inputTokens, outputTokens int) (tokentracker.Price, error) {
-	return tokentracker.Price{}, nil
-}
-
-func (p *MockProvider) SupportsModel(model string) bool {
-	return true
-}
-
-func (p *MockProvider) SetSDKClient(client interface{}) {
-	// Do nothing
-}
-
-func (p *MockProvider) GetModelInfo(model string) (interface{}, error) {
-	return nil, nil
-}
-
-func (p *MockProvider) ExtractTokenUsageFromResponse(response interface{}) (tokentracker.TokenCount, error) {
-	return tokentracker.TokenCount{}, nil
-}
-
-func (p *MockProvider) UpdatePricing() error {
-	return nil
 }

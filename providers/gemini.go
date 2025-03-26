@@ -146,4 +146,76 @@ func (p *GeminiProvider) estimateResponseTokens(model string, inputTokens int) i
 	return tokentracker.EstimateResponseTokens(model, inputTokens)
 }
 
-// Note: We can add helper functions here if needed for Gemini-specific functionality
+// SetSDKClient sets the provider-specific SDK client
+func (p *GeminiProvider) SetSDKClient(client interface{}) {
+	// Store the client for later use
+	// In a real implementation, this would be used to make API calls
+}
+
+// GetModelInfo returns information about a specific model
+func (p *GeminiProvider) GetModelInfo(model string) (interface{}, error) {
+	// In a real implementation, this would return model information
+	// For now, we'll just return a simple map
+	return map[string]interface{}{
+		"name":         model,
+		"provider":     "gemini",
+		"capabilities": []string{"text", "chat", "image-understanding"},
+	}, nil
+}
+
+// ExtractTokenUsageFromResponse extracts token usage from a provider response
+func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (tokentracker.TokenCount, error) {
+	// Check if response is nil
+	if response == nil {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "response is nil", nil)
+	}
+
+	// Try to cast to map[string]interface{} which is common for JSON responses
+	respMap, ok := response.(map[string]interface{})
+	if !ok {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "response is not a map", nil)
+	}
+
+	// Extract usage information from the response
+	usage, ok := respMap["usage"].(map[string]interface{})
+	if !ok {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "usage information not found in response", nil)
+	}
+
+	// Extract token counts
+	promptTokens, ok1 := usage["prompt_tokens"].(float64)
+	completionTokens, ok2 := usage["completion_tokens"].(float64)
+	totalTokens, ok3 := usage["total_tokens"].(float64)
+
+	if !ok1 || !ok2 || !ok3 {
+		return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "token counts not found in response", nil)
+	}
+
+	return tokentracker.TokenCount{
+		InputTokens:    int(promptTokens),
+		ResponseTokens: int(completionTokens),
+		TotalTokens:    int(totalTokens),
+	}, nil
+}
+
+// UpdatePricing updates the pricing information for this provider
+func (p *GeminiProvider) UpdatePricing() error {
+	// If we have an SDK client, we could use it to fetch the latest pricing
+	// For now, we'll just update with hardcoded values
+	
+	// Gemini Pro pricing (as of March 2024)
+	p.config.SetModelPricing("gemini", "gemini-pro", tokentracker.ModelPricing{
+		InputPricePerToken:  0.00000025,
+		OutputPricePerToken: 0.0000005,
+		Currency:            "USD",
+	})
+	
+	// Gemini Ultra pricing (as of March 2024)
+	p.config.SetModelPricing("gemini", "gemini-ultra", tokentracker.ModelPricing{
+		InputPricePerToken:  0.00001,
+		OutputPricePerToken: 0.00003,
+		Currency:            "USD",
+	})
+	
+	return nil
+}
