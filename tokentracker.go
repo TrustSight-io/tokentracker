@@ -3,6 +3,8 @@ package tokentracker
 import (
 	"fmt"
 	"time"
+
+	"github.com/TrustSight-io/tokentracker/sdkwrappers"
 )
 
 // TokenTracker interface defines the main functionality
@@ -15,6 +17,15 @@ type TokenTracker interface {
 
 	// TrackUsage tracks full usage for an LLM call
 	TrackUsage(callParams CallParams, response interface{}) (UsageMetrics, error)
+
+	// RegisterSDKClient registers an SDK client with the appropriate provider
+	RegisterSDKClient(client sdkwrappers.SDKClientWrapper) error
+
+	// UpdateAllPricing updates pricing information for all registered providers
+	UpdateAllPricing() error
+
+	// TrackTokenUsage extracts token usage from a provider response
+	TrackTokenUsage(providerName string, response interface{}) (TokenCount, error)
 }
 
 // DefaultTokenTracker implements the TokenTracker interface
@@ -38,6 +49,55 @@ func NewTokenTracker(config *Config) *DefaultTokenTracker {
 // RegisterProvider registers a provider with the token tracker
 func (t *DefaultTokenTracker) RegisterProvider(provider Provider) {
 	t.registry.Register(provider)
+}
+
+// RegisterSDKClient registers an SDK client with the appropriate provider
+func (t *DefaultTokenTracker) RegisterSDKClient(client sdkwrappers.SDKClientWrapper) error {
+	providerName := client.GetProviderName()
+	provider, exists := t.registry.Get(providerName)
+	
+	if !exists {
+		return NewError(ErrProviderNotFound, fmt.Sprintf("no provider found with name: %s", providerName), nil)
+	}
+	
+	// Set the SDK client in the provider
+	provider.SetSDKClient(client.GetClient())
+	
+	// Update pricing information
+	if err := client.UpdateProviderPricing(); err != nil {
+		return NewError(ErrPricingUpdateFailed, "failed to update pricing information", err)
+	}
+	
+	return nil
+}
+
+// UpdateAllPricing updates pricing information for all registered providers
+func (t *DefaultTokenTracker) UpdateAllPricing() error {
+	providers := t.registry.All()
+	var lastErr error
+	
+	for _, provider := range providers {
+		if err := provider.UpdatePricing(); err != nil {
+			lastErr = err
+		}
+	}
+	
+	if lastErr != nil {
+		return NewError(ErrPricingUpdateFailed, "failed to update pricing for one or more providers", lastErr)
+	}
+	
+	return nil
+}
+
+// TrackTokenUsage extracts token usage from a provider response
+func (t *DefaultTokenTracker) TrackTokenUsage(providerName string, response interface{}) (TokenCount, error) {
+	provider, exists := t.registry.Get(providerName)
+	
+	if !exists {
+		return TokenCount{}, NewError(ErrProviderNotFound, fmt.Sprintf("no provider found with name: %s", providerName), nil)
+	}
+	
+	return provider.ExtractTokenUsageFromResponse(response)
 }
 
 // CountTokens counts tokens for the given parameters
