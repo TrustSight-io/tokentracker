@@ -188,3 +188,8 @@ func (t *DefaultTokenTracker) TrackUsage(callParams CallParams, response interfa
 
 	return metrics, nil
 }
+
+// Error constants for SDK client operations
+const (
+	ErrPricingUpdateFailed = "pricing_update_failed"
+)
