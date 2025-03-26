@@ -15,6 +15,18 @@ type Provider interface {
 
 	// SupportsModel checks if the provider supports a specific model
 	SupportsModel(model string) bool
+
+	// SetSDKClient sets the provider-specific SDK client
+	SetSDKClient(client interface{})
+
+	// GetModelInfo returns information about a specific model
+	GetModelInfo(model string) (interface{}, error)
+
+	// ExtractTokenUsageFromResponse extracts token usage from a provider response
+	ExtractTokenUsageFromResponse(response interface{}) (TokenCount, error)
+
+	// UpdatePricing updates the pricing information for this provider
+	UpdatePricing() error
 }
 
 // ProviderRegistry manages available providers
