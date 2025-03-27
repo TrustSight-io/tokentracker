@@ -2,6 +2,10 @@
 
 A Golang module for tracking token usage and calculating pricing for API calls to various LLM providers (Gemini, Claude, OpenAI).
 
+## Status
+
+✅ Initialized and ready for usage. This project provides a comprehensive solution for tracking token usage and calculating costs across multiple LLM providers.
+
 ## Features
 
 - Token counting for text and chat messages
@@ -18,6 +22,22 @@ A Golang module for tracking token usage and calculating pricing for API calls t
 
 ```bash
 go get github.com/TrustSight-io/tokentracker
+```
+
+## Quick Start
+
+The repository includes two examples:
+1. A simpler example in `example/main.go` demonstrating core functionality
+2. A more comprehensive example in `cmd/main.go` showcasing all features
+
+To run the examples:
+
+```bash
+# Run the original example
+make example-original
+
+# Run the comprehensive example
+make example
 ```
 
 ## Usage
