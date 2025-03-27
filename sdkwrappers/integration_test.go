@@ -180,19 +180,19 @@ func TestSDKWrapperIntegration(t *testing.T) {
 		if usage.TokenCount.InputTokens <= 0 {
 			t.Errorf("Expected positive input tokens, got: %d", usage.TokenCount.InputTokens)
 		}
-		
+
 		if usage.TokenCount.ResponseTokens <= 0 {
 			t.Errorf("Expected positive response tokens, got: %d", usage.TokenCount.ResponseTokens)
 		}
-		
+
 		if usage.TokenCount.TotalTokens <= 0 {
 			t.Errorf("Expected positive total tokens, got: %d", usage.TokenCount.TotalTokens)
 		}
-		
+
 		if usage.Price.TotalCost <= 0 {
 			t.Errorf("Expected non-zero total cost, got: %f", usage.Price.TotalCost)
 		}
-		
+
 		if usage.Duration <= 0 {
 			t.Errorf("Expected positive duration, got: %v", usage.Duration)
 		}
@@ -207,24 +207,24 @@ func validateMetrics(t *testing.T, metrics common.UsageMetrics, provider, model 
 	if metrics.Model != model {
 		t.Errorf("Expected model: %s, got: %s", model, metrics.Model)
 	}
-	
+
 	// We'll be more flexible with token counts as implementations might differ
 	if metrics.TokenCount.InputTokens <= 0 {
 		t.Errorf("Expected positive input tokens, got: %d", metrics.TokenCount.InputTokens)
 	}
-	
+
 	if metrics.TokenCount.ResponseTokens <= 0 {
 		t.Errorf("Expected positive response tokens, got: %d", metrics.TokenCount.ResponseTokens)
 	}
-	
+
 	if metrics.TokenCount.TotalTokens <= 0 {
 		t.Errorf("Expected positive total tokens, got: %d", metrics.TokenCount.TotalTokens)
 	}
-	
+
 	if metrics.Price.TotalCost <= 0 {
 		t.Errorf("Expected positive total cost, got: %f", metrics.Price.TotalCost)
 	}
-	
+
 	if metrics.Timestamp.IsZero() {
 		t.Errorf("Expected non-zero timestamp")
 	}
