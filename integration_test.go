@@ -1,12 +1,13 @@
 //go:build integration
 // +build integration
 
-package tokentracker
+package tokentracker_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/TrustSight-io/tokentracker"
 	"github.com/TrustSight-io/tokentracker/providers"
 )
 
@@ -14,10 +15,10 @@ import (
 // with all providers integrated.
 func TestTokenTrackerIntegration(t *testing.T) {
 	// Create a new configuration
-	config := NewConfig()
+	config := tokentracker.NewConfig()
 
 	// Create a new token tracker
-	tracker := NewTokenTracker(config)
+	tracker := tokentracker.NewTokenTracker(config)
 
 	// Register all providers
 	openaiProvider := providers.NewOpenAIProvider(config)
@@ -31,7 +32,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 	// Test text token counting across all providers
 	t.Run("Text Token Counting", func(t *testing.T) {
 		text := "This is a sample text for integration testing of token counting across all providers."
-
+		
 		models := []struct {
 			name     string
 			model    string
@@ -44,7 +45,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 
 		for _, m := range models {
 			t.Run(m.name, func(t *testing.T) {
-				params := TokenCountParams{
+				params := tokentracker.TokenCountParams{
 					Model: m.model,
 					Text:  &text,
 				}
@@ -69,7 +70,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 
 	// Test message token counting across all providers
 	t.Run("Message Token Counting", func(t *testing.T) {
-		messages := []Message{
+		messages := []tokentracker.Message{
 			{
 				Role:    "system",
 				Content: "You are a helpful assistant.",
@@ -79,7 +80,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 				Content: "Tell me about token counting in language models.",
 			},
 		}
-
+		
 		models := []struct {
 			name     string
 			model    string
@@ -92,7 +93,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 
 		for _, m := range models {
 			t.Run(m.name, func(t *testing.T) {
-				params := TokenCountParams{
+				params := tokentracker.TokenCountParams{
 					Model:    m.model,
 					Messages: messages,
 				}
@@ -167,9 +168,9 @@ func TestTokenTrackerIntegration(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				// Create call parameters
-				callParams := CallParams{
+				callParams := tokentracker.CallParams{
 					Model: tc.model,
-					Params: TokenCountParams{
+					Params: tokentracker.TokenCountParams{
 						Model: tc.model,
 						Text:  stringPtr("This is a test message for usage tracking integration testing."),
 					},
@@ -314,7 +315,7 @@ func mockGeminiResponse(model string, inputTokens, outputTokens int) interface{}
 }
 
 // Helper function to validate usage metrics
-func validateUsageMetrics(t *testing.T, usage UsageMetrics, model, provider string) {
+func validateUsageMetrics(t *testing.T, usage tokentracker.UsageMetrics, model, provider string) {
 	if usage.Model != model {
 		t.Errorf("Expected model: %s, got: %s", model, usage.Model)
 	}

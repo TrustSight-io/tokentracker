@@ -53,7 +53,10 @@ coverage:
 
 test-integration:
 	@echo "Running integration tests..."
-	@go test -tags=integration -v ./...
+	@echo "Running integration tests in providers package..."
+	@go test -tags=integration -v ./providers/...
+	@echo "Running integration tests in sdkwrappers package..."
+	@go test -tags=integration -v ./sdkwrappers/...
 
 test-all: test test-integration
 	@echo "All tests completed successfully!"

@@ -54,10 +54,13 @@ The tokentracker module includes comprehensive testing:
 go test ./...
 
 # Run integration tests
-go test -tags=integration ./...
+make test-integration
+
+# Run all tests (unit + integration)
+make test-all
 ```
 
-Integration tests validate interactions between different tokentracker components using mock services for external API calls.
+Integration tests validate interactions between different tokentracker components using mock services for external API calls. These tests ensure that providers and SDK wrappers work correctly together.
 
 ## Usage
 

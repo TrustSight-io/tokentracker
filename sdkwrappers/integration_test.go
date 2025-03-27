@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/TrustSight-io/tokentracker"
+	"github.com/TrustSight-io/tokentracker/common"
 	"github.com/TrustSight-io/tokentracker/providers"
 )
 
@@ -23,9 +24,12 @@ func TestSDKWrapperIntegration(t *testing.T) {
 	geminiProvider := providers.NewGeminiProvider(config)
 
 	// Create SDK wrappers
-	openaiWrapper := NewOpenAISDKWrapper("mock-api-key", openaiProvider)
-	anthropicWrapper := NewAnthropicSDKWrapper("mock-api-key", anthropicProvider)
-	geminiWrapper := NewGeminiSDKWrapper("mock-api-key", geminiProvider)
+	openaiWrapper := NewOpenAISDKWrapper("mock-api-key")
+	anthropicWrapper := NewAnthropicSDKWrapper("mock-api-key")
+	geminiWrapper, err := NewGeminiSDKWrapper("mock-api-key")
+	if err != nil {
+		t.Fatalf("Failed to create Gemini SDK wrapper: %v", err)
+	}
 
 	// Register wrappers with a token tracker
 	tracker := tokentracker.NewTokenTracker(config)
@@ -33,7 +37,7 @@ func TestSDKWrapperIntegration(t *testing.T) {
 	tracker.RegisterProvider(anthropicProvider)
 	tracker.RegisterProvider(geminiProvider)
 
-	err := tracker.RegisterSDKClient(openaiWrapper)
+	err = tracker.RegisterSDKClient(openaiWrapper)
 	if err != nil {
 		t.Fatalf("Failed to register OpenAI SDK client: %v", err)
 	}
@@ -70,7 +74,7 @@ func TestSDKWrapperIntegration(t *testing.T) {
 			t.Fatalf("OpenAISDKWrapper.TrackAPICall failed: %v", err)
 		}
 
-		validateMetrics(t, metrics, "OpenAI", GPT4, 100, 50, 150)
+		validateMetrics(t, metrics, "openai", GPT4, 100, 50, 150)
 	})
 
 	// Test Anthropic wrapper with mock response
@@ -191,7 +195,7 @@ func TestSDKWrapperIntegration(t *testing.T) {
 }
 
 // Helper function to validate metrics
-func validateMetrics(t *testing.T, metrics tokentracker.UsageMetrics, provider, model string, inputTokens, outputTokens, totalTokens int) {
+func validateMetrics(t *testing.T, metrics common.UsageMetrics, provider, model string, inputTokens, outputTokens, totalTokens int) {
 	if metrics.Provider != provider {
 		t.Errorf("Expected provider: %s, got: %s", provider, metrics.Provider)
 	}
