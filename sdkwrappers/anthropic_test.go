@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/TrustSight-io/tokentracker"
-	"github.com/TrustSight-io/tokentracker/common"
 )
 
 // MockClaudeProvider is a mock Provider implementation for testing

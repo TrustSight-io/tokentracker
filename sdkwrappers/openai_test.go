@@ -82,7 +82,6 @@ type MockOpenAIResponse struct {
 }
 
 func TestOpenAISDKWrapper_GetProviderName(t *testing.T) {
-	provider := &MockOpenAIProvider{name: "openai", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &OpenAISDKWrapper{}
 
@@ -92,7 +91,6 @@ func TestOpenAISDKWrapper_GetProviderName(t *testing.T) {
 }
 
 func TestOpenAISDKWrapper_GetClient(t *testing.T) {
-	provider := &MockOpenAIProvider{name: "openai", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &OpenAISDKWrapper{}
 
@@ -103,7 +101,6 @@ func TestOpenAISDKWrapper_GetClient(t *testing.T) {
 }
 
 func TestOpenAISDKWrapper_GetSupportedModels(t *testing.T) {
-	provider := &MockOpenAIProvider{name: "openai", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &OpenAISDKWrapper{}
 
@@ -132,7 +129,6 @@ func TestOpenAISDKWrapper_GetSupportedModels(t *testing.T) {
 }
 
 func TestOpenAISDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
-	provider := &MockOpenAIProvider{name: "openai", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &OpenAISDKWrapper{}
 
@@ -189,7 +185,6 @@ func TestOpenAISDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
 }
 
 func TestOpenAISDKWrapper_FetchCurrentPricing(t *testing.T) {
-	provider := &MockOpenAIProvider{name: "openai", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &OpenAISDKWrapper{}
 
@@ -226,7 +221,6 @@ func TestOpenAISDKWrapper_FetchCurrentPricing(t *testing.T) {
 }
 
 func TestOpenAISDKWrapper_TrackAPICall(t *testing.T) {
-	provider := &MockOpenAIProvider{name: "openai", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &OpenAISDKWrapper{}
 
@@ -290,7 +284,6 @@ func TestOpenAISDKWrapper_TrackAPICall(t *testing.T) {
 }
 
 func TestOpenAISDKWrapper_UpdateProviderPricing(t *testing.T) {
-	provider := &MockOpenAIProvider{name: "openai", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &OpenAISDKWrapper{}
 

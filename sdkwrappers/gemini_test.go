@@ -80,7 +80,6 @@ type MockGeminiResponse struct {
 }
 
 func TestGeminiSDKWrapper_GetProviderName(t *testing.T) {
-	provider := &MockGeminiProvider{name: "gemini", supports: true}
 	// Use a mock constructor since we can't actually make API calls in tests
 	wrapper := &GeminiSDKWrapper{}
 
@@ -90,7 +89,6 @@ func TestGeminiSDKWrapper_GetProviderName(t *testing.T) {
 }
 
 func TestGeminiSDKWrapper_GetClient(t *testing.T) {
-	provider := &MockGeminiProvider{name: "gemini", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &GeminiSDKWrapper{}
 
@@ -101,7 +99,6 @@ func TestGeminiSDKWrapper_GetClient(t *testing.T) {
 }
 
 func TestGeminiSDKWrapper_GetSupportedModels(t *testing.T) {
-	provider := &MockGeminiProvider{name: "gemini", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &GeminiSDKWrapper{}
 
@@ -130,7 +127,6 @@ func TestGeminiSDKWrapper_GetSupportedModels(t *testing.T) {
 }
 
 func TestGeminiSDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
-	provider := &MockGeminiProvider{name: "gemini", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &GeminiSDKWrapper{}
 
@@ -178,7 +174,6 @@ func TestGeminiSDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
 }
 
 func TestGeminiSDKWrapper_FetchCurrentPricing(t *testing.T) {
-	provider := &MockGeminiProvider{name: "gemini", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &GeminiSDKWrapper{}
 
@@ -215,7 +210,6 @@ func TestGeminiSDKWrapper_FetchCurrentPricing(t *testing.T) {
 }
 
 func TestGeminiSDKWrapper_TrackAPICall(t *testing.T) {
-	provider := &MockGeminiProvider{name: "gemini", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &GeminiSDKWrapper{}
 
@@ -276,7 +270,6 @@ func TestGeminiSDKWrapper_TrackAPICall(t *testing.T) {
 }
 
 func TestGeminiSDKWrapper_UpdateProviderPricing(t *testing.T) {
-	provider := &MockGeminiProvider{name: "gemini", supports: true}
 	// Skip actual client creation in tests
 	wrapper := &GeminiSDKWrapper{}
 
