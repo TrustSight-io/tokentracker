@@ -9,8 +9,6 @@ import (
 // MockOpenAIProvider is a mock Provider implementation for testing
 type MockOpenAIProvider struct {
 	name     string
-	models   []string
-	pricing  map[string]tokentracker.ModelPricing
 	client   interface{}
 	supports bool
 }

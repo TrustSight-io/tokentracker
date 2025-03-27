@@ -9,8 +9,6 @@ import (
 // MockClaudeProvider is a mock Provider implementation for testing
 type MockClaudeProvider struct {
 	name     string
-	models   []string
-	pricing  map[string]tokentracker.ModelPricing
 	client   interface{}
 	supports bool
 }

@@ -9,8 +9,6 @@ import (
 // MockGeminiProvider is a mock Provider implementation for testing
 type MockGeminiProvider struct {
 	name     string
-	models   []string
-	pricing  map[string]tokentracker.ModelPricing
 	client   interface{}
 	supports bool
 }

@@ -179,7 +179,10 @@ func TestClaudeProvider_CalculatePrice(t *testing.T) {
 	provider := NewClaudeProvider(config)
 
 	// Update pricing information to ensure consistent test results
-	provider.UpdatePricing()
+	err := provider.UpdatePricing()
+	if err != nil {
+		t.Fatalf("Failed to update pricing: %v", err)
+	}
 
 	tests := []struct {
 		name         string

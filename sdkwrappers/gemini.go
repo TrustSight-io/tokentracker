@@ -82,11 +82,9 @@ func (w *GeminiSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 	}
 
 	// Set model if available from candidates
-	if len(resp.Candidates) > 0 && resp.Candidates[0] != nil {
-		// The model information might be available in the candidate
-		// This is a placeholder as the actual field depends on the SDK
-		// usage.Model = resp.Candidates[0].ModelName
-	}
+	// The model information might not be directly available in the response
+	// so we're not setting it here. In a future update, if the SDK provides
+	// this information, we can extract it.
 
 	return usage, nil
 }

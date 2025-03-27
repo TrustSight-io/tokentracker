@@ -155,7 +155,10 @@ func TestGeminiProvider_CalculatePrice(t *testing.T) {
 	provider := NewGeminiProvider(config)
 
 	// Update pricing information to ensure consistent test results
-	provider.UpdatePricing()
+	err := provider.UpdatePricing()
+	if err != nil {
+		t.Fatalf("Failed to update pricing: %v", err)
+	}
 
 	tests := []struct {
 		name         string
