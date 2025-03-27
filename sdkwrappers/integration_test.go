@@ -99,7 +99,7 @@ func TestSDKWrapperIntegration(t *testing.T) {
 	t.Run("Gemini SDK Wrapper", func(t *testing.T) {
 		// Mock Gemini response
 		type MockGeminiResponse struct {
-			Model     string `json:"model"`
+			Model         string `json:"model"`
 			UsageMetadata struct {
 				PromptTokenCount     int `json:"promptTokenCount"`
 				CandidatesTokenCount int `json:"candidatesTokenCount"`

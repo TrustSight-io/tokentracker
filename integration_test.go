@@ -31,7 +31,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 	// Test text token counting across all providers
 	t.Run("Text Token Counting", func(t *testing.T) {
 		text := "This is a sample text for integration testing of token counting across all providers."
-		
+
 		models := []struct {
 			name     string
 			model    string
@@ -79,7 +79,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 				Content: "Tell me about token counting in language models.",
 			},
 		}
-		
+
 		models := []struct {
 			name     string
 			model    string
@@ -202,7 +202,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 	// Test provider discovery and selection
 	t.Run("Provider Discovery", func(t *testing.T) {
 		models := []struct {
-			model          string
+			model            string
 			expectedProvider string
 		}{
 			{"gpt-4", "openai"},
@@ -222,7 +222,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 			}
 
 			if provider.Name() != m.expectedProvider {
-				t.Errorf("Expected provider %s for model %s, got %s", 
+				t.Errorf("Expected provider %s for model %s, got %s",
 					m.expectedProvider, m.model, provider.Name())
 			}
 		}
@@ -271,9 +271,9 @@ func mockOpenAIResponse(model string, inputTokens, outputTokens int) interface{}
 // Mock Anthropic response with token usage
 func mockAnthropicResponse(model string, inputTokens, outputTokens int) interface{} {
 	return struct {
-		ID     string
-		Model  string
-		Usage  struct {
+		ID    string
+		Model string
+		Usage struct {
 			InputTokens  int
 			OutputTokens int
 		}

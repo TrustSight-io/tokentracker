@@ -22,7 +22,7 @@ func TestProviderIntegration_AllProviders(t *testing.T) {
 
 	// Common test input
 	inputText := "This is a sample text for token counting across multiple providers."
-	
+
 	// Test all providers with the same text input
 	providers := []struct {
 		name     string
