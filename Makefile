@@ -1,4 +1,4 @@
-.PHONY: all build test clean example
+.PHONY: all build test test-integration test-all clean example
 
 # Variables
 BINARY_NAME=tokentracker
@@ -50,3 +50,10 @@ coverage:
 	@go test -cover ./...
 	@go test -coverprofile=coverage.out ./...
 	@go tool cover -html=coverage.out -o coverage.html
+
+test-integration:
+	@echo "Running integration tests..."
+	@go test -tags=integration -v ./...
+
+test-all: test test-integration
+	@echo "All tests completed successfully!"
