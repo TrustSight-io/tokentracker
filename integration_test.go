@@ -2,7 +2,6 @@
 // +build integration
 
 package tokentracker_test
-package tokentracker_test
 
 import (
 	"testing"
@@ -16,7 +15,6 @@ import (
 // with all providers integrated.
 func TestTokenTrackerIntegration(t *testing.T) {
 	// Create a new configuration
-	config := tokentracker.NewConfig()
 	config := tokentracker.NewConfig()
 
 	// Create a new token tracker
@@ -34,7 +32,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 	// Test text token counting across all providers
 	t.Run("Text Token Counting", func(t *testing.T) {
 		text := "This is a sample text for integration testing of token counting across all providers."
-		
+
 		models := []struct {
 			name     string
 			model    string
@@ -47,7 +45,6 @@ func TestTokenTrackerIntegration(t *testing.T) {
 
 		for _, m := range models {
 			t.Run(m.name, func(t *testing.T) {
-				params := tokentracker.TokenCountParams{
 				params := tokentracker.TokenCountParams{
 					Model: m.model,
 					Text:  &text,
@@ -68,7 +65,6 @@ func TestTokenTrackerIntegration(t *testing.T) {
 	// Test message token counting across all providers
 	t.Run("Message Token Counting", func(t *testing.T) {
 		messages := []tokentracker.Message{
-		messages := []tokentracker.Message{
 			{
 				Role:    "system",
 				Content: "You are a helpful assistant.",
@@ -78,7 +74,7 @@ func TestTokenTrackerIntegration(t *testing.T) {
 				Content: "Tell me about token counting in language models.",
 			},
 		}
-		
+
 		models := []struct {
 			name     string
 			model    string
@@ -91,7 +87,6 @@ func TestTokenTrackerIntegration(t *testing.T) {
 
 		for _, m := range models {
 			t.Run(m.name, func(t *testing.T) {
-				params := tokentracker.TokenCountParams{
 				params := tokentracker.TokenCountParams{
 					Model:    m.model,
 					Messages: messages,
@@ -163,7 +158,6 @@ func TestTokenTrackerIntegration(t *testing.T) {
 				// Create call parameters
 				callParams := tokentracker.CallParams{
 					Model: tc.model,
-					Params: tokentracker.TokenCountParams{
 					Params: tokentracker.TokenCountParams{
 						Model: tc.model,
 						Text:  stringPtr("This is a test message for usage tracking integration testing."),
