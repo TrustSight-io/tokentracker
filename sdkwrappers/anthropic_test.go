@@ -80,10 +80,7 @@ type MockAnthropicResponse struct {
 
 func TestAnthropicSDKWrapper_GetProviderName(t *testing.T) {
 	// The providers are no longer directly passed to the constructor
-	wrapper := &AnthropicSDKWrapper{
-		// Add a mock client to avoid nil pointer errors
-		client: struct{}{},
-	}
+	wrapper := &AnthropicSDKWrapper{}
 
 	if wrapper.GetProviderName() != "anthropic" {
 		t.Errorf("AnthropicSDKWrapper.GetProviderName() = %q, expected %q", wrapper.GetProviderName(), "anthropic")
@@ -92,10 +89,7 @@ func TestAnthropicSDKWrapper_GetProviderName(t *testing.T) {
 
 func TestAnthropicSDKWrapper_GetClient(t *testing.T) {
 	// The providers are no longer directly passed to the constructor
-	wrapper := &AnthropicSDKWrapper{
-		// Add a mock client to avoid nil pointer errors
-		client: struct{}{},
-	}
+	wrapper := &AnthropicSDKWrapper{}
 
 	client := wrapper.GetClient()
 	if client == nil {
@@ -105,10 +99,7 @@ func TestAnthropicSDKWrapper_GetClient(t *testing.T) {
 
 func TestAnthropicSDKWrapper_GetSupportedModels(t *testing.T) {
 	// The providers are no longer directly passed to the constructor
-	wrapper := &AnthropicSDKWrapper{
-		// Add a mock client to avoid nil pointer errors
-		client: struct{}{},
-	}
+	wrapper := &AnthropicSDKWrapper{}
 
 	models, err := wrapper.GetSupportedModels()
 	if err != nil {
