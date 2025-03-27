@@ -41,7 +41,7 @@ func (m *MockSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (co
 	if !ok {
 		return common.TokenUsage{}, nil
 	}
-	
+
 	return common.TokenUsage{
 		InputTokens:    int(mockResp.Usage.InputTokens),
 		OutputTokens:   int(mockResp.Usage.OutputTokens),
@@ -182,23 +182,23 @@ func TestSDKWrapperInterface(t *testing.T) {
 				t.Errorf("ExtractTokenUsageFromResponse() error = %v", err)
 			}
 			if usage.InputTokens != tt.expectedInput {
-				t.Errorf("ExtractTokenUsageFromResponse() input tokens = %v, want %v", 
+				t.Errorf("ExtractTokenUsageFromResponse() input tokens = %v, want %v",
 					usage.InputTokens, tt.expectedInput)
 			}
 			if usage.OutputTokens != tt.expectedOutput {
-				t.Errorf("ExtractTokenUsageFromResponse() output tokens = %v, want %v", 
+				t.Errorf("ExtractTokenUsageFromResponse() output tokens = %v, want %v",
 					usage.OutputTokens, tt.expectedOutput)
 			}
 			if usage.TotalTokens != tt.expectedInput+tt.expectedOutput {
-				t.Errorf("ExtractTokenUsageFromResponse() total tokens = %v, want %v", 
+				t.Errorf("ExtractTokenUsageFromResponse() total tokens = %v, want %v",
 					usage.TotalTokens, tt.expectedInput+tt.expectedOutput)
 			}
 			if usage.Model != tt.mockResponse.Model {
-				t.Errorf("ExtractTokenUsageFromResponse() model = %v, want %v", 
+				t.Errorf("ExtractTokenUsageFromResponse() model = %v, want %v",
 					usage.Model, tt.mockResponse.Model)
 			}
 			if usage.CompletionID != tt.mockResponse.ID {
-				t.Errorf("ExtractTokenUsageFromResponse() completion ID = %v, want %v", 
+				t.Errorf("ExtractTokenUsageFromResponse() completion ID = %v, want %v",
 					usage.CompletionID, tt.mockResponse.ID)
 			}
 		})

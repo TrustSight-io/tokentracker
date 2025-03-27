@@ -162,7 +162,7 @@ func (p *ClaudeProvider) UpdatePricing() error {
 
 	// If we have an SDK client, we could use it to fetch the latest pricing
 	// For now, we'll just update with hardcoded values
-	
+
 	// Claude 3 Haiku pricing (as of March 2024)
 	p.config.SetModelPricing("anthropic", "claude-3-haiku", tokentracker.ModelPricing{
 		InputPricePerToken:  0.00000025,
@@ -199,7 +199,7 @@ func (p *ClaudeProvider) approximateTokenCount(text string) int {
 	// A rough approximation is about 4 characters per token for English text
 	// This is a very simplified approach and should be replaced with a proper tokenizer
 	charCount := utf8.RuneCountInString(text)
-	
+
 	// Claude tends to have slightly fewer tokens than GPT for the same text
 	tokenCount := (charCount * 95) / 400 // Approximately 0.95 * charCount / 4
 

@@ -65,11 +65,11 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 	provider := NewClaudeProvider(config)
 
 	tests := []struct {
-		name         string
-		params       tokentracker.TokenCountParams
-		wantErr      bool
-		minExpected  int
-		maxExpected  int
+		name        string
+		params      tokentracker.TokenCountParams
+		wantErr     bool
+		minExpected int
+		maxExpected int
 	}{
 		{
 			name: "Empty model",
@@ -136,8 +136,8 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 		{
 			name: "With response tokens estimation",
 			params: tokentracker.TokenCountParams{
-				Model:              "claude-3-sonnet",
-				Text:               StringPtr("Estimate response tokens"),
+				Model:               "claude-3-sonnet",
+				Text:                StringPtr("Estimate response tokens"),
 				CountResponseTokens: true,
 			},
 			wantErr:     false,
@@ -158,7 +158,7 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 			}
 
 			if got.InputTokens < tt.minExpected || got.InputTokens > tt.maxExpected {
-				t.Errorf("ClaudeProvider.CountTokens() InputTokens = %v, expected between %v and %v", 
+				t.Errorf("ClaudeProvider.CountTokens() InputTokens = %v, expected between %v and %v",
 					got.InputTokens, tt.minExpected, tt.maxExpected)
 			}
 
@@ -167,7 +167,7 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 			}
 
 			if !tt.params.CountResponseTokens && got.ResponseTokens != 0 {
-				t.Errorf("ClaudeProvider.CountTokens() ResponseTokens = %v, expected 0 when CountResponseTokens is false", 
+				t.Errorf("ClaudeProvider.CountTokens() ResponseTokens = %v, expected 0 when CountResponseTokens is false",
 					got.ResponseTokens)
 			}
 		})

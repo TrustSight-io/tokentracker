@@ -53,7 +53,7 @@ func main() {
 	// In a real application, you would keep the program running
 	// For this example, we'll just simulate a short run
 	fmt.Println("Press Ctrl+C to exit...")
-	
+
 	// Keep the program running
 	select {}
 }

@@ -103,7 +103,7 @@ func TestExtractTextFromMessages(t *testing.T) {
 		expected string
 	}{
 		{
-			name: "Empty messages",
+			name:     "Empty messages",
 			messages: []Message{},
 			expected: "",
 		},

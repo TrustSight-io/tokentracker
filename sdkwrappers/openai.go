@@ -27,7 +27,7 @@ type OpenAISDKWrapper struct {
 func NewOpenAISDKWrapper(apiKey string) *OpenAISDKWrapper {
 	// Create client with API key
 	client := openai.NewClient(option.WithAPIKey(apiKey))
-	
+
 	return &OpenAISDKWrapper{
 		client: client,
 	}
@@ -71,9 +71,9 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 		CompletionID:   resp.ID,
 		Model:          resp.Model,
 		Timestamp:      time.Now(),
-		PromptTokens:   int(resp.Usage.PromptTokens),    // Same as InputTokens for OpenAI
+		PromptTokens:   int(resp.Usage.PromptTokens),     // Same as InputTokens for OpenAI
 		ResponseTokens: int(resp.Usage.CompletionTokens), // Same as OutputTokens for OpenAI
-		RequestID:      resp.SystemFingerprint,          // OpenAI uses SystemFingerprint as a request ID
+		RequestID:      resp.SystemFingerprint,           // OpenAI uses SystemFingerprint as a request ID
 	}
 
 	return usage, nil

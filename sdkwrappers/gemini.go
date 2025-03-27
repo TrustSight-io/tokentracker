@@ -12,10 +12,10 @@ import (
 
 // Gemini model constants
 const (
-	GeminiPro   = "gemini-pro"
-	GeminiUltra = "gemini-ultra"
+	GeminiPro    = "gemini-pro"
+	GeminiUltra  = "gemini-ultra"
 	GeminiPro1_5 = "gemini-1.5-pro"
-	GeminiFlash = "gemini-1.5-flash"
+	GeminiFlash  = "gemini-1.5-flash"
 )
 
 // GeminiSDKWrapper wraps the Gemini SDK client
@@ -31,7 +31,7 @@ func NewGeminiSDKWrapper(apiKey string) (*GeminiSDKWrapper, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
 	}
-	
+
 	return &GeminiSDKWrapper{
 		client: client,
 	}, nil

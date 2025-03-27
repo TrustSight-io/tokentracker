@@ -202,20 +202,20 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 func (p *GeminiProvider) UpdatePricing() error {
 	// If we have an SDK client, we could use it to fetch the latest pricing
 	// For now, we'll just update with hardcoded values
-	
+
 	// Gemini Pro pricing (as of March 2024)
 	p.config.SetModelPricing("gemini", "gemini-pro", tokentracker.ModelPricing{
 		InputPricePerToken:  0.00000025,
 		OutputPricePerToken: 0.0000005,
 		Currency:            "USD",
 	})
-	
+
 	// Gemini Ultra pricing (as of March 2024)
 	p.config.SetModelPricing("gemini", "gemini-ultra", tokentracker.ModelPricing{
 		InputPricePerToken:  0.00001,
 		OutputPricePerToken: 0.00003,
 		Currency:            "USD",
 	})
-	
+
 	return nil
 }

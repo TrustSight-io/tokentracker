@@ -54,8 +54,8 @@ func main() {
 	}
 
 	chatParams := tokentracker.TokenCountParams{
-		Model:              "claude-3-sonnet",
-		Messages:           messages,
+		Model:               "claude-3-sonnet",
+		Messages:            messages,
 		CountResponseTokens: true,
 	}
 

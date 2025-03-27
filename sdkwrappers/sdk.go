@@ -21,10 +21,10 @@ type SDKClientWrapper interface {
 
 	// FetchCurrentPricing fetches the current pricing information for all supported models
 	FetchCurrentPricing() (map[string]common.ModelPricing, error)
-	
+
 	// UpdateProviderPricing updates the pricing information in the provider
 	UpdateProviderPricing() error
-	
+
 	// TrackAPICall tracks an API call and returns usage metrics
 	TrackAPICall(model string, response interface{}) (common.UsageMetrics, error)
 }

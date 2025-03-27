@@ -31,11 +31,11 @@ type ToolChoice struct {
 
 // TokenCountParams contains parameters for token counting
 type TokenCountParams struct {
-	Model              string
-	Text               *string
-	Messages           []Message
-	Tools              []Tool
-	ToolChoice         *ToolChoice
+	Model               string
+	Text                *string
+	Messages            []Message
+	Tools               []Tool
+	ToolChoice          *ToolChoice
 	CountResponseTokens bool
 }
 

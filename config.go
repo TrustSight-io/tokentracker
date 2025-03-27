@@ -32,7 +32,7 @@ type Config struct {
 // NewConfig creates a new configuration with default values
 func NewConfig() *Config {
 	return &Config{
-		Providers:         map[string]ProviderConfig{
+		Providers: map[string]ProviderConfig{
 			"openai": {
 				Models: map[string]ModelPricing{
 					"gpt-3.5-turbo": {
@@ -162,11 +162,11 @@ func (c *Config) EnableAutomaticPricingUpdates(interval time.Duration) {
 	c.pricingUpdateTimer = time.AfterFunc(interval, func() {
 		// This function will be called when the timer expires
 		// It should trigger a pricing update and then reset the timer
-		
+
 		// Note: In a real implementation, this would call a method on TokenTracker
 		// to update all pricing. Since we don't have direct access to TokenTracker here,
 		// this is just a placeholder.
-		
+
 		// Reset the timer for the next interval
 		c.pricingUpdateTimer.Reset(interval)
 	})
@@ -215,6 +215,6 @@ func (c *Config) DisableUsageLogging() {
 func (c *Config) GetUsageLogPath() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	return c.usageLogPath
 }

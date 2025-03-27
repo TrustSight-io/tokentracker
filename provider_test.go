@@ -94,27 +94,27 @@ func TestProviderRegistry_Get(t *testing.T) {
 	registry.Register(provider2)
 
 	tests := []struct {
-		name          string
-		providerName  string
-		expectedFound bool
+		name             string
+		providerName     string
+		expectedFound    bool
 		expectedProvider Provider
 	}{
 		{
-			name:          "Existing provider",
-			providerName:  "provider-1",
-			expectedFound: true,
+			name:             "Existing provider",
+			providerName:     "provider-1",
+			expectedFound:    true,
 			expectedProvider: provider1,
 		},
 		{
-			name:          "Another existing provider",
-			providerName:  "provider-2",
-			expectedFound: true,
+			name:             "Another existing provider",
+			providerName:     "provider-2",
+			expectedFound:    true,
 			expectedProvider: provider2,
 		},
 		{
-			name:          "Non-existent provider",
-			providerName:  "provider-3",
-			expectedFound: false,
+			name:             "Non-existent provider",
+			providerName:     "provider-3",
+			expectedFound:    false,
 			expectedProvider: nil,
 		},
 	}
@@ -134,82 +134,82 @@ func TestProviderRegistry_Get(t *testing.T) {
 
 func TestProviderRegistry_GetForModel(t *testing.T) {
 	registry := NewProviderRegistry()
-	
+
 	provider1 := &MockSimpleProvider{
 		name: "provider-1",
 		supportedModels: map[string]bool{
-			"model-1": true,
+			"model-1":      true,
 			"shared-model": true,
 		},
 	}
-	
+
 	provider2 := &MockSimpleProvider{
 		name: "provider-2",
 		supportedModels: map[string]bool{
-			"model-2": true,
+			"model-2":      true,
 			"shared-model": true,
 		},
 	}
-	
+
 	provider3 := &MockSimpleProvider{
 		name: "provider-3",
 		supportedModels: map[string]bool{
 			"model-3": true,
 		},
 	}
-	
+
 	registry.Register(provider1)
 	registry.Register(provider2)
 	registry.Register(provider3)
-	
+
 	tests := []struct {
-		name            string
-		model           string
-		expectedFound   bool
+		name              string
+		model             string
+		expectedFound     bool
 		possibleProviders []string
 	}{
 		{
-			name:            "Model supported by provider 1",
-			model:           "model-1",
-			expectedFound:   true,
+			name:              "Model supported by provider 1",
+			model:             "model-1",
+			expectedFound:     true,
 			possibleProviders: []string{"provider-1"},
 		},
 		{
-			name:            "Model supported by provider 2",
-			model:           "model-2",
-			expectedFound:   true,
+			name:              "Model supported by provider 2",
+			model:             "model-2",
+			expectedFound:     true,
 			possibleProviders: []string{"provider-2"},
 		},
 		{
-			name:            "Model supported by provider 3",
-			model:           "model-3",
-			expectedFound:   true,
+			name:              "Model supported by provider 3",
+			model:             "model-3",
+			expectedFound:     true,
 			possibleProviders: []string{"provider-3"},
 		},
 		{
-			name:            "Model supported by multiple providers",
-			model:           "shared-model",
-			expectedFound:   true,
+			name:              "Model supported by multiple providers",
+			model:             "shared-model",
+			expectedFound:     true,
 			possibleProviders: []string{"provider-1", "provider-2"},
 		},
 		{
-			name:            "Unsupported model",
-			model:           "unsupported-model",
-			expectedFound:   false,
+			name:              "Unsupported model",
+			model:             "unsupported-model",
+			expectedFound:     false,
 			possibleProviders: nil,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			provider, exists := registry.GetForModel(tt.model)
 			if exists != tt.expectedFound {
 				t.Errorf("GetForModel(%q) exists = %v, expected %v", tt.model, exists, tt.expectedFound)
 			}
-			
+
 			if exists {
 				foundProviderName := provider.Name()
-				
+
 				// Check that the provider is one of the possible providers
 				found := false
 				for _, name := range tt.possibleProviders {
@@ -218,7 +218,7 @@ func TestProviderRegistry_GetForModel(t *testing.T) {
 						break
 					}
 				}
-				
+
 				if !found {
 					t.Errorf("GetForModel(%q) returned provider %q, expected one of %v", tt.model, foundProviderName, tt.possibleProviders)
 				}
@@ -229,34 +229,34 @@ func TestProviderRegistry_GetForModel(t *testing.T) {
 
 func TestProviderRegistry_All(t *testing.T) {
 	registry := NewProviderRegistry()
-	
+
 	// Test with empty registry
 	providers := registry.All()
 	if len(providers) != 0 {
 		t.Errorf("Expected empty registry to return empty slice, got %d providers", len(providers))
 	}
-	
+
 	// Add some providers
 	provider1 := &MockSimpleProvider{name: "provider-1", supportedModels: map[string]bool{"model-1": true}}
 	provider2 := &MockSimpleProvider{name: "provider-2", supportedModels: map[string]bool{"model-2": true}}
 	provider3 := &MockSimpleProvider{name: "provider-3", supportedModels: map[string]bool{"model-3": true}}
-	
+
 	registry.Register(provider1)
 	registry.Register(provider2)
 	registry.Register(provider3)
-	
+
 	// Check that all providers are returned
 	providers = registry.All()
 	if len(providers) != 3 {
 		t.Errorf("Expected 3 providers, got %d", len(providers))
 	}
-	
+
 	// Check that all providers are in the result
 	providerNames := make(map[string]bool)
 	for _, p := range providers {
 		providerNames[p.Name()] = true
 	}
-	
+
 	expectedNames := []string{"provider-1", "provider-2", "provider-3"}
 	for _, name := range expectedNames {
 		if !providerNames[name] {
@@ -267,22 +267,22 @@ func TestProviderRegistry_All(t *testing.T) {
 
 func TestProviderRegistry_ThreadSafety(t *testing.T) {
 	registry := NewProviderRegistry()
-	
+
 	// Number of concurrent goroutines
 	const numGoroutines = 10
-	
+
 	// Create a wait group to wait for all goroutines to complete
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines * 2) // For both registering and getting providers
-	
+
 	// Channel to capture errors
 	errChan := make(chan error, numGoroutines*2)
-	
+
 	// Concurrently register providers
 	for i := 0; i < numGoroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			
+
 			providerName := fmt.Sprintf("provider-%d", id)
 			provider := &MockSimpleProvider{
 				name: providerName,
@@ -290,40 +290,40 @@ func TestProviderRegistry_ThreadSafety(t *testing.T) {
 					fmt.Sprintf("model-%d", id): true,
 				},
 			}
-			
+
 			// Try to register the provider
 			registry.Register(provider)
 		}(i)
 	}
-	
+
 	// Concurrently get providers
 	for i := 0; i < numGoroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			
+
 			providerName := fmt.Sprintf("provider-%d", id)
 			modelName := fmt.Sprintf("model-%d", id)
-			
+
 			// Try to get the provider by name
 			_, _ = registry.Get(providerName)
-			
+
 			// Try to get the provider by model
 			_, _ = registry.GetForModel(modelName)
-			
+
 			// Try to get all providers
 			_ = registry.All()
 		}(i)
 	}
-	
+
 	// Wait for all goroutines to complete
 	wg.Wait()
 	close(errChan)
-	
+
 	// Check if there were any errors
 	for err := range errChan {
 		t.Errorf("Concurrent access error: %v", err)
 	}
-	
+
 	// Check that all providers are registered
 	providers := registry.All()
 	if len(providers) != numGoroutines {
@@ -334,7 +334,7 @@ func TestProviderRegistry_ThreadSafety(t *testing.T) {
 func TestProvider_Interface(t *testing.T) {
 	// Test that a provider implements all required methods of the Provider interface
 	var _ Provider = &MockSimpleProvider{} // Will not compile if MockSimpleProvider doesn't implement Provider
-	
+
 	// Create a provider to test individual methods
 	provider := &MockSimpleProvider{
 		name: "test-provider",
@@ -342,12 +342,12 @@ func TestProvider_Interface(t *testing.T) {
 			"model-1": true,
 		},
 	}
-	
+
 	// Test Name method
 	if name := provider.Name(); name != "test-provider" {
 		t.Errorf("Name() = %q, expected %q", name, "test-provider")
 	}
-	
+
 	// Test SupportsModel method
 	if !provider.SupportsModel("model-1") {
 		t.Errorf("SupportsModel(%q) = false, expected true", "model-1")
@@ -355,19 +355,19 @@ func TestProvider_Interface(t *testing.T) {
 	if provider.SupportsModel("unsupported-model") {
 		t.Errorf("SupportsModel(%q) = true, expected false", "unsupported-model")
 	}
-	
+
 	// Test CountTokens method
 	_, err := provider.CountTokens(TokenCountParams{Model: "model-1"})
 	if err != nil {
 		t.Errorf("CountTokens() error = %v, expected nil", err)
 	}
-	
+
 	// Test CalculatePrice method
 	_, err = provider.CalculatePrice("model-1", 100, 50)
 	if err != nil {
 		t.Errorf("CalculatePrice() error = %v, expected nil", err)
 	}
-	
+
 	// Test other methods (these are no-ops in the mock, so just ensure they don't panic)
 	func() {
 		defer func() {
@@ -377,7 +377,7 @@ func TestProvider_Interface(t *testing.T) {
 		}()
 		provider.SetSDKClient(nil)
 	}()
-	
+
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -386,7 +386,7 @@ func TestProvider_Interface(t *testing.T) {
 		}()
 		_, _ = provider.GetModelInfo("model-1")
 	}()
-	
+
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -395,7 +395,7 @@ func TestProvider_Interface(t *testing.T) {
 		}()
 		_, _ = provider.ExtractTokenUsageFromResponse(nil)
 	}()
-	
+
 	func() {
 		defer func() {
 			if r := recover(); r != nil {

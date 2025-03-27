@@ -53,7 +53,7 @@ func main() {
 
 func demoBasicTokenCounting(tracker *tokentracker.DefaultTokenTracker) {
 	fmt.Println("=== Basic Token Counting ===")
-	
+
 	text := "This is a sample text for token counting. It would be used to demonstrate the token counting functionality."
 	params := tokentracker.TokenCountParams{
 		Model: "gpt-3.5-turbo",
@@ -74,7 +74,7 @@ func demoBasicTokenCounting(tracker *tokentracker.DefaultTokenTracker) {
 
 func demoChatTokenCounting(tracker *tokentracker.DefaultTokenTracker) {
 	fmt.Println("=== Chat Token Counting ===")
-	
+
 	messages := []tokentracker.Message{
 		{
 			Role:    "system",
@@ -91,11 +91,11 @@ func demoChatTokenCounting(tracker *tokentracker.DefaultTokenTracker) {
 	}
 
 	models := []string{"gpt-4", "claude-3-sonnet", "gemini-pro"}
-	
+
 	for _, model := range models {
 		params := tokentracker.TokenCountParams{
-			Model:              model,
-			Messages:           messages,
+			Model:               model,
+			Messages:            messages,
 			CountResponseTokens: true,
 		}
 
@@ -114,7 +114,7 @@ func demoChatTokenCounting(tracker *tokentracker.DefaultTokenTracker) {
 
 func demoPriceCalculation(tracker *tokentracker.DefaultTokenTracker) {
 	fmt.Println("=== Price Calculation ===")
-	
+
 	modelPricings := []struct {
 		model        string
 		inputTokens  int
@@ -128,7 +128,7 @@ func demoPriceCalculation(tracker *tokentracker.DefaultTokenTracker) {
 		{"gemini-pro", 1000, 500},
 		{"gemini-ultra", 1000, 500},
 	}
-	
+
 	for _, mp := range modelPricings {
 		price, err := tracker.CalculatePrice(mp.model, mp.inputTokens, mp.outputTokens)
 		if err != nil {
@@ -146,7 +146,7 @@ func demoPriceCalculation(tracker *tokentracker.DefaultTokenTracker) {
 
 func demoUsageTracking(tracker *tokentracker.DefaultTokenTracker) {
 	fmt.Println("=== Usage Tracking ===")
-	
+
 	// Create messages for the call
 	messages := []tokentracker.Message{
 		{
@@ -154,7 +154,7 @@ func demoUsageTracking(tracker *tokentracker.DefaultTokenTracker) {
 			Content: "Explain how tokens work in large language models.",
 		},
 	}
-	
+
 	// Create call parameters
 	callParams := tokentracker.CallParams{
 		Model: "gpt-3.5-turbo",
@@ -164,23 +164,23 @@ func demoUsageTracking(tracker *tokentracker.DefaultTokenTracker) {
 		},
 		StartTime: time.Now().Add(-300 * time.Millisecond), // Simulate a call that took 300ms
 	}
-	
+
 	// Simulate a response
 	type MockResponse struct {
 		Content string
 	}
-	
+
 	response := MockResponse{
 		Content: "Tokens are the basic units of text that language models process. They are not exactly words, but rather word pieces or subwords. For example, the word 'tokenization' might be split into the tokens 'token' and 'ization'. Most modern language models use subword tokenization algorithms like BPE (Byte Pair Encoding) or WordPiece. This approach allows models to handle a large vocabulary while keeping the token set manageable. Each token is assigned a unique ID that the model uses for processing. The number of tokens in a text affects both the model's processing time and the cost of API calls, as providers typically charge based on the number of tokens processed.",
 	}
-	
+
 	// Track usage
 	usage, err := tracker.TrackUsage(callParams, response)
 	if err != nil {
 		fmt.Printf("Error tracking usage: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("Model: %s\n", callParams.Model)
 	fmt.Printf("Input tokens: %d\n", usage.TokenCount.InputTokens)
 	fmt.Printf("Response tokens: %d\n", usage.TokenCount.ResponseTokens)
@@ -193,16 +193,16 @@ func demoUsageTracking(tracker *tokentracker.DefaultTokenTracker) {
 
 func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvider, claudeProvider, geminiProvider tokentracker.Provider) {
 	fmt.Println("=== SDK Integration ===")
-	
+
 	// Check for environment variables to determine which SDK integrations to demo
 	openaiKey := os.Getenv("OPENAI_API_KEY")
 	claudeKey := os.Getenv("ANTHROPIC_API_KEY")
 	geminiKey := os.Getenv("GEMINI_API_KEY")
-	
+
 	if openaiKey != "" {
 		fmt.Println("Registering OpenAI SDK wrapper...")
 		openaiWrapper := sdkwrappers.NewOpenAISDKWrapper(openaiKey, openaiProvider)
-		
+
 		err := tracker.RegisterSDKClient(openaiWrapper)
 		if err != nil {
 			fmt.Printf("Error registering OpenAI SDK client: %v\n", err)
@@ -212,11 +212,11 @@ func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvide
 	} else {
 		fmt.Println("Skipping OpenAI SDK integration (OPENAI_API_KEY not set)")
 	}
-	
+
 	if claudeKey != "" {
 		fmt.Println("Registering Claude SDK wrapper...")
 		claudeWrapper := sdkwrappers.NewAnthropicSDKWrapper(claudeKey, claudeProvider)
-		
+
 		err := tracker.RegisterSDKClient(claudeWrapper)
 		if err != nil {
 			fmt.Printf("Error registering Claude SDK client: %v\n", err)
@@ -226,11 +226,11 @@ func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvide
 	} else {
 		fmt.Println("Skipping Claude SDK integration (ANTHROPIC_API_KEY not set)")
 	}
-	
+
 	if geminiKey != "" {
 		fmt.Println("Registering Gemini SDK wrapper...")
 		geminiWrapper := sdkwrappers.NewGeminiSDKWrapper(geminiKey, geminiProvider)
-		
+
 		err := tracker.RegisterSDKClient(geminiWrapper)
 		if err != nil {
 			fmt.Printf("Error registering Gemini SDK client: %v\n", err)
@@ -240,7 +240,7 @@ func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvide
 	} else {
 		fmt.Println("Skipping Gemini SDK integration (GEMINI_API_KEY not set)")
 	}
-	
+
 	// Attempt to update pricing information for all providers
 	fmt.Println("Updating pricing information for all providers...")
 	if err := tracker.UpdateAllPricing(); err != nil {
@@ -248,6 +248,6 @@ func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvide
 	} else {
 		fmt.Println("Pricing information updated successfully")
 	}
-	
+
 	fmt.Println()
 }

@@ -60,11 +60,11 @@ func TestGeminiProvider_CountTokens(t *testing.T) {
 	provider := NewGeminiProvider(config)
 
 	tests := []struct {
-		name         string
-		params       tokentracker.TokenCountParams
-		wantErr      bool
-		minExpected  int
-		maxExpected  int
+		name        string
+		params      tokentracker.TokenCountParams
+		wantErr     bool
+		minExpected int
+		maxExpected int
 	}{
 		{
 			name: "Empty model",
@@ -112,8 +112,8 @@ func TestGeminiProvider_CountTokens(t *testing.T) {
 		{
 			name: "With response tokens estimation",
 			params: tokentracker.TokenCountParams{
-				Model:              "gemini-ultra",
-				Text:               StringPtr("Estimate response tokens"),
+				Model:               "gemini-ultra",
+				Text:                StringPtr("Estimate response tokens"),
 				CountResponseTokens: true,
 			},
 			wantErr:     false,
@@ -134,7 +134,7 @@ func TestGeminiProvider_CountTokens(t *testing.T) {
 			}
 
 			if got.InputTokens < tt.minExpected || got.InputTokens > tt.maxExpected {
-				t.Errorf("GeminiProvider.CountTokens() InputTokens = %v, expected between %v and %v", 
+				t.Errorf("GeminiProvider.CountTokens() InputTokens = %v, expected between %v and %v",
 					got.InputTokens, tt.minExpected, tt.maxExpected)
 			}
 
@@ -143,7 +143,7 @@ func TestGeminiProvider_CountTokens(t *testing.T) {
 			}
 
 			if !tt.params.CountResponseTokens && got.ResponseTokens != 0 {
-				t.Errorf("GeminiProvider.CountTokens() ResponseTokens = %v, expected 0 when CountResponseTokens is false", 
+				t.Errorf("GeminiProvider.CountTokens() ResponseTokens = %v, expected 0 when CountResponseTokens is false",
 					got.ResponseTokens)
 			}
 		})

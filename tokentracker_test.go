@@ -174,31 +174,31 @@ func TestDefaultTokenTracker_CalculatePrice(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name        string
-		model       string
-		inputTokens int
+		name         string
+		model        string
+		inputTokens  int
 		outputTokens int
-		want        Price
-		wantErr     bool
+		want         Price
+		wantErr      bool
 	}{
 		{
-			name:        "Empty model",
-			model:       "",
-			inputTokens: 100,
+			name:         "Empty model",
+			model:        "",
+			inputTokens:  100,
 			outputTokens: 50,
-			wantErr:     true,
+			wantErr:      true,
 		},
 		{
-			name:        "Unsupported model",
-			model:       "unsupported-model",
-			inputTokens: 100,
+			name:         "Unsupported model",
+			model:        "unsupported-model",
+			inputTokens:  100,
 			outputTokens: 50,
-			wantErr:     true,
+			wantErr:      true,
 		},
 		{
-			name:        "Supported model",
-			model:       "mock-model",
-			inputTokens: 100,
+			name:         "Supported model",
+			model:        "mock-model",
+			inputTokens:  100,
 			outputTokens: 50,
 			want: Price{
 				InputCost:  0.0001,

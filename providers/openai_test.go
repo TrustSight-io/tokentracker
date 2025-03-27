@@ -15,11 +15,11 @@ func TestOpenAIProvider_CountTokens(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name           string
-		params         tokentracker.TokenCountParams
-		wantMinTokens  int // Minimum expected tokens
-		wantMaxTokens  int // Maximum expected tokens
-		wantErr        bool
+		name          string
+		params        tokentracker.TokenCountParams
+		wantMinTokens int // Minimum expected tokens
+		wantMaxTokens int // Maximum expected tokens
+		wantErr       bool
 	}{
 		{
 			name: "Empty model",

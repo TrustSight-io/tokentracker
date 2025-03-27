@@ -163,28 +163,28 @@ func (p *OpenAIProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 func (p *OpenAIProvider) UpdatePricing() error {
 	// If we have an SDK client, we could use it to fetch the latest pricing
 	// For now, we'll just update with hardcoded values
-	
+
 	// GPT-3.5 Turbo pricing (as of March 2024)
 	p.config.SetModelPricing("openai", "gpt-3.5-turbo", tokentracker.ModelPricing{
 		InputPricePerToken:  0.0000015,
 		OutputPricePerToken: 0.000002,
 		Currency:            "USD",
 	})
-	
+
 	// GPT-4 pricing (as of March 2024)
 	p.config.SetModelPricing("openai", "gpt-4", tokentracker.ModelPricing{
 		InputPricePerToken:  0.00003,
 		OutputPricePerToken: 0.00006,
 		Currency:            "USD",
 	})
-	
+
 	// GPT-4 Turbo pricing (as of March 2024)
 	p.config.SetModelPricing("openai", "gpt-4-turbo", tokentracker.ModelPricing{
 		InputPricePerToken:  0.00001,
 		OutputPricePerToken: 0.00003,
 		Currency:            "USD",
 	})
-	
+
 	return nil
 }
 
@@ -192,18 +192,18 @@ func (p *OpenAIProvider) UpdatePricing() error {
 func (p *OpenAIProvider) getEncoding(model string) (*tiktoken.Tiktoken, error) {
 	// Map model to encoding
 	encodingName := "cl100k_base" // Default for most newer models
-	
+
 	// Override for specific models if needed
 	if model == "text-embedding-ada" {
 		encodingName = "r50k_base"
 	}
-	
+
 	// Get the encoding
 	encoding, err := tiktoken.GetEncoding(encodingName)
 	if err != nil {
 		return nil, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to get encoding", err)
 	}
-	
+
 	return encoding, nil
 }
 
@@ -214,34 +214,34 @@ func (p *OpenAIProvider) countMessageTokens(_ string, messages []tokentracker.Me
 	if err != nil {
 		return 0, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to marshal messages", err)
 	}
-	
+
 	// Count tokens in the messages JSON
 	tokens := len(encoding.Encode(string(messagesJSON), nil, nil))
-	
+
 	// Add tokens for tools if present
 	if len(tools) > 0 {
 		toolsJSON, err := json.Marshal(tools)
 		if err != nil {
 			return 0, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to marshal tools", err)
 		}
-		
+
 		tokens += len(encoding.Encode(string(toolsJSON), nil, nil))
 	}
-	
+
 	// Add tokens for tool choice if present
 	if toolChoice != nil {
 		toolChoiceJSON, err := json.Marshal(toolChoice)
 		if err != nil {
 			return 0, tokentracker.NewError(tokentracker.ErrTokenizationFailed, "failed to marshal tool choice", err)
 		}
-		
+
 		tokens += len(encoding.Encode(string(toolChoiceJSON), nil, nil))
 	}
-	
+
 	// Add tokens for message formatting
 	// This is a simplified approach; a real implementation would be more precise
 	tokens += 3 // For the message format
-	
+
 	return tokens, nil
 }
 

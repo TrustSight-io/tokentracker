@@ -23,10 +23,10 @@ type SDKClient interface {
 
 	// FetchCurrentPricing fetches the current pricing information for all supported models
 	FetchCurrentPricing() (map[string]common.ModelPricing, error)
-	
+
 	// UpdateProviderPricing updates the pricing information in the provider
 	UpdateProviderPricing() error
-	
+
 	// TrackAPICall tracks an API call and returns usage metrics
 	TrackAPICall(model string, response interface{}) (common.UsageMetrics, error)
 }
@@ -79,19 +79,19 @@ func (t *DefaultTokenTracker) RegisterProvider(provider Provider) {
 func (t *DefaultTokenTracker) RegisterSDKClient(client SDKClient) error {
 	providerName := client.GetProviderName()
 	provider, exists := t.registry.Get(providerName)
-	
+
 	if !exists {
 		return NewError(ErrProviderNotFound, fmt.Sprintf("no provider found with name: %s", providerName), nil)
 	}
-	
+
 	// Set the SDK client in the provider
 	provider.SetSDKClient(client.GetClient())
-	
+
 	// Update pricing information
 	if err := client.UpdateProviderPricing(); err != nil {
 		return NewError(ErrPricingUpdateFailed, "failed to update pricing information", err)
 	}
-	
+
 	return nil
 }
 
@@ -99,28 +99,28 @@ func (t *DefaultTokenTracker) RegisterSDKClient(client SDKClient) error {
 func (t *DefaultTokenTracker) UpdateAllPricing() error {
 	providers := t.registry.All()
 	var lastErr error
-	
+
 	for _, provider := range providers {
 		if err := provider.UpdatePricing(); err != nil {
 			lastErr = err
 		}
 	}
-	
+
 	if lastErr != nil {
 		return NewError(ErrPricingUpdateFailed, "failed to update pricing for one or more providers", lastErr)
 	}
-	
+
 	return nil
 }
 
 // TrackTokenUsage extracts token usage from a provider response
 func (t *DefaultTokenTracker) TrackTokenUsage(providerName string, response interface{}) (TokenCount, error) {
 	provider, exists := t.registry.Get(providerName)
-	
+
 	if !exists {
 		return TokenCount{}, NewError(ErrProviderNotFound, fmt.Sprintf("no provider found with name: %s", providerName), nil)
 	}
-	
+
 	return provider.ExtractTokenUsageFromResponse(response)
 }
 

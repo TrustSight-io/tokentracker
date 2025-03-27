@@ -26,7 +26,7 @@ type AnthropicSDKWrapper struct {
 func NewAnthropicSDKWrapper(apiKey string) *AnthropicSDKWrapper {
 	// Create client with API key
 	client := anthropic.NewClient(option.WithAPIKey(apiKey))
-	
+
 	return &AnthropicSDKWrapper{
 		client: client,
 	}
