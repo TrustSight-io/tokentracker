@@ -201,7 +201,7 @@ func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvide
 
 	if openaiKey != "" {
 		fmt.Println("Registering OpenAI SDK wrapper...")
-		openaiWrapper := sdkwrappers.NewOpenAISDKWrapper(openaiKey, openaiProvider)
+		openaiWrapper := sdkwrappers.NewOpenAISDKWrapper(openaiKey)
 
 		err := tracker.RegisterSDKClient(openaiWrapper)
 		if err != nil {
@@ -215,7 +215,7 @@ func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvide
 
 	if claudeKey != "" {
 		fmt.Println("Registering Claude SDK wrapper...")
-		claudeWrapper := sdkwrappers.NewAnthropicSDKWrapper(claudeKey, claudeProvider)
+		claudeWrapper := sdkwrappers.NewAnthropicSDKWrapper(claudeKey)
 
 		err := tracker.RegisterSDKClient(claudeWrapper)
 		if err != nil {
@@ -229,13 +229,16 @@ func demoSDKIntegration(tracker *tokentracker.DefaultTokenTracker, openaiProvide
 
 	if geminiKey != "" {
 		fmt.Println("Registering Gemini SDK wrapper...")
-		geminiWrapper := sdkwrappers.NewGeminiSDKWrapper(geminiKey, geminiProvider)
-
-		err := tracker.RegisterSDKClient(geminiWrapper)
+		geminiWrapper, err := sdkwrappers.NewGeminiSDKWrapper(geminiKey)
 		if err != nil {
-			fmt.Printf("Error registering Gemini SDK client: %v\n", err)
+			fmt.Printf("Error creating Gemini SDK wrapper: %v\n", err)
 		} else {
-			fmt.Println("Gemini SDK client registered successfully")
+			err = tracker.RegisterSDKClient(geminiWrapper)
+			if err != nil {
+				fmt.Printf("Error registering Gemini SDK client: %v\n", err)
+			} else {
+				fmt.Println("Gemini SDK client registered successfully")
+			}
 		}
 	} else {
 		fmt.Println("Skipping Gemini SDK integration (GEMINI_API_KEY not set)")
