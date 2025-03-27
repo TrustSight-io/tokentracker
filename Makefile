@@ -57,6 +57,8 @@ test-integration:
 	@go test -tags=integration -v ./providers/...
 	@echo "Running integration tests in sdkwrappers package..."
 	@go test -tags=integration -v ./sdkwrappers/...
+	@echo "Running integration tests in main package..."
+	@go test -tags=integration -v .
 
 test-all: test test-integration
 	@echo "All tests completed successfully!"
