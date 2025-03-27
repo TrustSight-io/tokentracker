@@ -135,6 +135,7 @@ func (w *OpenAISDKWrapper) TrackAPICall(model string, response interface{}) (com
 		return common.UsageMetrics{}, err
 	}
 
+	// Use the model parameter instead of extracting from response
 	modelPricing, ok := pricing[model]
 	if !ok {
 		return common.UsageMetrics{}, fmt.Errorf("no pricing information found for model: %s", model)

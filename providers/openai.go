@@ -208,7 +208,7 @@ func (p *OpenAIProvider) getEncoding(model string) (*tiktoken.Tiktoken, error) {
 }
 
 // countMessageTokens counts tokens for chat messages
-func (p *OpenAIProvider) countMessageTokens(model string, messages []tokentracker.Message, tools []tokentracker.Tool, toolChoice *tokentracker.ToolChoice, encoding *tiktoken.Tiktoken) (int, error) {
+func (p *OpenAIProvider) countMessageTokens(_ string, messages []tokentracker.Message, tools []tokentracker.Tool, toolChoice *tokentracker.ToolChoice, encoding *tiktoken.Tiktoken) (int, error) {
 	// Convert messages to JSON for token counting
 	messagesJSON, err := json.Marshal(messages)
 	if err != nil {
