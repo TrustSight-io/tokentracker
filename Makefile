@@ -16,6 +16,12 @@ test:
 	@echo "Running tests..."
 	@go test -v ./...
 
+test-coverage:
+	@echo "Running tests with coverage..."
+	@go test -cover ./...
+	@go test -coverprofile=coverage.out ./...
+	@go tool cover -html=coverage.out -o coverage.html
+
 clean:
 	@echo "Cleaning up..."
 	@go clean
