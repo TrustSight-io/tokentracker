@@ -1,5 +1,10 @@
 # Token Tracker
 
+[![Go CI/CD](https://github.com/TrustSight-io/tokentracker/actions/workflows/ci.yml/badge.svg)](https://github.com/TrustSight-io/tokentracker/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/TrustSight-io/tokentracker/branch/main/graph/badge.svg)](https://codecov.io/gh/TrustSight-io/tokentracker)
+[![Go Report Card](https://goreportcard.com/badge/github.com/TrustSight-io/tokentracker)](https://goreportcard.com/report/github.com/TrustSight-io/tokentracker)
+[![Go Reference](https://pkg.go.dev/badge/github.com/TrustSight-io/tokentracker.svg)](https://pkg.go.dev/github.com/TrustSight-io/tokentracker)
+
 A Golang module for tracking token usage and calculating pricing for API calls to various LLM providers (Gemini, Claude, OpenAI).
 
 ## Status
@@ -283,6 +288,94 @@ config.EnableUsageLogging("token_usage.log")
 // Make API calls and track usage
 // ...
 ```
+
+## Using TokenTracker in Your Microservice
+
+Since this is a private package, you'll need to set up authentication to access it.
+
+### Setting Up Authentication
+
+#### Local Development
+
+1. Create or update your `.netrc` file:
+   ```
+   machine github.com
+   login your-github-username
+   password your-personal-access-token
+   ```
+   
+2. Set up your Go environment:
+   ```bash
+   go env -w GOPRIVATE=github.com/TrustSight-io/*
+   ```
+
+3. Import the package in your Go code:
+   ```go
+   import (
+       "github.com/TrustSight-io/tokentracker"
+       "github.com/TrustSight-io/tokentracker/providers"
+   )
+   ```
+
+4. Use versioned imports in go.mod:
+   ```
+   require (
+       github.com/TrustSight-io/tokentracker v1.2.3
+   )
+   ```
+
+### CI/CD Configuration
+
+For GitHub Actions workflows:
+
+```yaml
+- name: Set up Go module authentication
+  run: git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+  env:
+    GITHUB_TOKEN: ${{ secrets.GO_MODULE_TOKEN }}
+
+- name: Configure Go private modules
+  run: go env -w GOPRIVATE=github.com/TrustSight-io/*
+```
+
+### Docker Builds
+
+For Dockerfile builds:
+
+```dockerfile
+# Use build args to pass GitHub token
+ARG GITHUB_TOKEN
+
+# Configure Git to use token for GitHub
+RUN git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+# Set GOPRIVATE
+ENV GOPRIVATE=github.com/TrustSight-io/*
+
+# Build your application
+COPY . .
+RUN go build -o app
+```
+
+Then build with:
+
+```bash
+docker build --build-arg GITHUB_TOKEN=your-github-token -t your-image .
+```
+
+### Example Files
+
+We provide several example files to help you integrate TokenTracker into your microservices:
+
+1. **Dockerfile Example**: [examples/Dockerfile.example](examples/Dockerfile.example)
+   - A complete example Dockerfile for applications using TokenTracker
+
+2. **GitHub Actions Workflow**: [examples/github-workflow.example.yml](examples/github-workflow.example.yml)
+   - Example CI/CD workflow for microservices using TokenTracker
+
+3. **Local Development Setup Script**: [examples/setup-env.sh](examples/setup-env.sh)
+   - Shell script to set up your local environment for TokenTracker development
+   - Usage: `./examples/setup-env.sh <github-username> <personal-access-token>`
 
 ## License
 
