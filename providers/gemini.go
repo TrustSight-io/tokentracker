@@ -189,7 +189,7 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 	}
 
 	// Try different response formats
-	
+
 	// First, try to cast to map[string]interface{} which is common for JSON responses
 	if respMap, ok := response.(map[string]interface{}); ok {
 		// Check for usage key at top level
@@ -197,7 +197,7 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 			// Extract token counts
 			promptTokens, ok1 := usage["prompt_tokens"].(float64)
 			completionTokens, ok2 := usage["completion_tokens"].(float64)
-			
+
 			// If we have both prompt and completion tokens
 			if ok1 && ok2 {
 				totalTokens := promptTokens + completionTokens
@@ -207,7 +207,7 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 					TotalTokens:    int(totalTokens),
 				}, nil
 			}
-			
+
 			// If we have total_tokens explicitly provided
 			if totalTokens, ok3 := usage["total_tokens"].(float64); ok1 && ok2 && ok3 {
 				return tokentracker.TokenCount{
@@ -217,13 +217,13 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 				}, nil
 			}
 		}
-		
+
 		// Check for usageMetadata structure
 		if usageMetadata, ok := respMap["usageMetadata"].(map[string]interface{}); ok {
 			promptTokens, ok1 := usageMetadata["promptTokenCount"].(float64)
 			candidatesTokens, ok2 := usageMetadata["candidatesTokenCount"].(float64)
 			totalTokens, ok3 := usageMetadata["totalTokenCount"].(float64)
-			
+
 			if ok1 && ok2 && ok3 {
 				return tokentracker.TokenCount{
 					InputTokens:    int(promptTokens),
@@ -233,7 +233,7 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 			}
 		}
 	}
-	
+
 	return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "token counts not found in response", nil)
 }
 

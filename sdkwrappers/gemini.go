@@ -79,7 +79,7 @@ func (w *GeminiSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 			PromptTokens:   int(resp.UsageMetadata.PromptTokenCount),
 			ResponseTokens: int(resp.UsageMetadata.CandidatesTokenCount),
 		}, nil
-		
+
 	// Special case for maps (used in mock JSON responses)
 	case map[string]interface{}:
 		// Check for expected structure in mock responses for UsageMetadata
@@ -107,13 +107,13 @@ func (w *GeminiSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 	if respType == "*sdkwrappers.MockGeminiResponse" {
 		// Use reflection to safely access fields
 		respValue := reflect.ValueOf(response).Elem()
-		
+
 		// Get UsageMetadata struct and its fields
 		if usageMetadataField := respValue.FieldByName("UsageMetadata"); usageMetadataField.IsValid() {
 			promptTokens := 0
 			candidatesTokens := 0
 			totalTokens := 0
-			
+
 			if promptField := usageMetadataField.FieldByName("PromptTokenCount"); promptField.IsValid() {
 				promptTokens = int(promptField.Int())
 			}
@@ -123,7 +123,7 @@ func (w *GeminiSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 			if totalField := usageMetadataField.FieldByName("TotalTokenCount"); totalField.IsValid() {
 				totalTokens = int(totalField.Int())
 			}
-			
+
 			return common.TokenUsage{
 				InputTokens:    promptTokens,
 				OutputTokens:   candidatesTokens,

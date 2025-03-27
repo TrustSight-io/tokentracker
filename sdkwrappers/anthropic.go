@@ -70,7 +70,7 @@ func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}
 			PromptTokens:   int(resp.Usage.InputTokens),
 			ResponseTokens: int(resp.Usage.OutputTokens),
 		}, nil
-		
+
 	// Special case for maps (used in mock JSON responses)
 	case map[string]interface{}:
 		// Check for expected structure in mock responses
@@ -102,7 +102,7 @@ func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}
 	if respType == "*sdkwrappers.MockAnthropicResponse" {
 		// Use reflection to safely access fields
 		respValue := reflect.ValueOf(response).Elem()
-		
+
 		// Get ID and Model fields
 		id := ""
 		model := ""
@@ -112,19 +112,19 @@ func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}
 		if modelField := respValue.FieldByName("Model"); modelField.IsValid() {
 			model = modelField.String()
 		}
-		
+
 		// Get Usage struct and its fields
 		if usageField := respValue.FieldByName("Usage"); usageField.IsValid() {
 			inputTokens := 0
 			outputTokens := 0
-			
+
 			if inputField := usageField.FieldByName("InputTokens"); inputField.IsValid() {
 				inputTokens = int(inputField.Int())
 			}
 			if outputField := usageField.FieldByName("OutputTokens"); outputField.IsValid() {
 				outputTokens = int(outputField.Int())
 			}
-			
+
 			return common.TokenUsage{
 				InputTokens:    inputTokens,
 				OutputTokens:   outputTokens,

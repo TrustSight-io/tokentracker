@@ -73,7 +73,7 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 			ResponseTokens: int(resp.Usage.CompletionTokens),
 			RequestID:      resp.SystemFingerprint,
 		}, nil
-		
+
 	// Special case for maps (used in mock JSON responses)
 	case map[string]interface{}:
 		// Check for expected structure in mock responses
@@ -87,7 +87,7 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 								if sf, hasSF := resp["system_fingerprint"].(string); hasSF {
 									systemFingerprint = sf
 								}
-								
+
 								return common.TokenUsage{
 									InputTokens:    int(promptTokens),
 									OutputTokens:   int(completionTokens),
@@ -113,12 +113,12 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 	if respType == "*sdkwrappers.MockOpenAIResponse" {
 		// Use reflection to safely access fields
 		respValue := reflect.ValueOf(response).Elem()
-		
+
 		// Get ID, Model, and SystemFingerprint fields
 		id := ""
 		model := ""
 		systemFingerprint := ""
-		
+
 		if idField := respValue.FieldByName("ID"); idField.IsValid() {
 			id = idField.String()
 		}
@@ -128,13 +128,13 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 		if sfField := respValue.FieldByName("SystemFingerprint"); sfField.IsValid() {
 			systemFingerprint = sfField.String()
 		}
-		
+
 		// Get Usage struct and its fields
 		if usageField := respValue.FieldByName("Usage"); usageField.IsValid() {
 			promptTokens := 0
 			completionTokens := 0
 			totalTokens := 0
-			
+
 			if promptField := usageField.FieldByName("PromptTokens"); promptField.IsValid() {
 				promptTokens = int(promptField.Int())
 			}
@@ -144,7 +144,7 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 			if totalField := usageField.FieldByName("TotalTokens"); totalField.IsValid() {
 				totalTokens = int(totalField.Int())
 			}
-			
+
 			return common.TokenUsage{
 				InputTokens:    promptTokens,
 				OutputTokens:   completionTokens,
