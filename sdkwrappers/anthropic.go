@@ -9,20 +9,6 @@ import (
 	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
-// MockAnthropicResponse is a mock response structure for testing
-type MockAnthropicResponse struct {
-	ID      string `json:"id"`
-	Model   string `json:"model"`
-	Content []struct {
-		Type string `json:"type"`
-		Text string `json:"text"`
-	} `json:"content"`
-	Usage struct {
-		InputTokens  int `json:"input_tokens"`
-		OutputTokens int `json:"output_tokens"`
-	} `json:"usage"`
-}
-
 // Claude model constants
 const (
 	ClaudeHaiku  = "claude-3-haiku"
@@ -69,24 +55,35 @@ func (w *AnthropicSDKWrapper) GetSupportedModels() ([]string, error) {
 
 // ExtractTokenUsageFromResponse extracts token usage from an Anthropic API response
 func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (common.TokenUsage, error) {
-	// Check if we have a mock response (for testing)
-	if mockResp, ok := response.(*MockAnthropicResponse); ok {
-		return common.TokenUsage{
-			InputTokens:    mockResp.Usage.InputTokens,
-			OutputTokens:   mockResp.Usage.OutputTokens,
-			TotalTokens:    mockResp.Usage.InputTokens + mockResp.Usage.OutputTokens,
-			CompletionID:   mockResp.ID,
-			Model:          mockResp.Model,
-			Timestamp:      time.Now(),
-			PromptTokens:   mockResp.Usage.InputTokens,
-			ResponseTokens: mockResp.Usage.OutputTokens,
-		}, nil
+	// Try type assertion to see if this is a map (used for mocks in tests)
+	if respMap, ok := response.(map[string]interface{}); ok {
+		// Check for expected structure in mock responses
+		if id, hasID := respMap["id"].(string); hasID {
+			if model, hasModel := respMap["model"].(string); hasModel {
+				if usage, hasUsage := respMap["usage"].(map[string]interface{}); hasUsage {
+					if inputTokens, hasInput := usage["input_tokens"].(float64); hasInput {
+						if outputTokens, hasOutput := usage["output_tokens"].(float64); hasOutput {
+							return common.TokenUsage{
+								InputTokens:    int(inputTokens),
+								OutputTokens:   int(outputTokens),
+								TotalTokens:    int(inputTokens + outputTokens),
+								CompletionID:   id,
+								Model:          model,
+								Timestamp:      time.Now(),
+								PromptTokens:   int(inputTokens),
+								ResponseTokens: int(outputTokens),
+							}, nil
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Try to cast the response to *anthropic.Message
 	msg, ok := response.(*anthropic.Message)
 	if !ok {
-		return common.TokenUsage{}, fmt.Errorf("response is not an *anthropic.Message: %T", response)
+		return common.TokenUsage{}, fmt.Errorf("response is not an *anthropic.Message or valid mock: %T", response)
 	}
 
 	// Extract token usage information
@@ -97,8 +94,8 @@ func (w *AnthropicSDKWrapper) ExtractTokenUsageFromResponse(response interface{}
 		CompletionID:   msg.ID,
 		Model:          msg.Model,
 		Timestamp:      time.Now(),
-		PromptTokens:   int(msg.Usage.InputTokens),  // Same as InputTokens for Anthropic
-		ResponseTokens: int(msg.Usage.OutputTokens), // Same as OutputTokens for Anthropic
+		PromptTokens:   int(msg.Usage.InputTokens),
+		ResponseTokens: int(msg.Usage.OutputTokens),
 	}
 
 	return usage, nil
@@ -143,28 +140,6 @@ func (w *AnthropicSDKWrapper) UpdateProviderPricing() error {
 
 // TrackAPICall tracks an API call and returns usage metrics
 func (w *AnthropicSDKWrapper) TrackAPICall(model string, response interface{}) (common.UsageMetrics, error) {
-	// Handle special case for mock responses in tests
-	if mockResp, ok := response.(*MockAnthropicResponse); ok {
-		// For mocks, create simplified metrics
-		return common.UsageMetrics{
-			TokenCount: common.TokenCount{
-				InputTokens:    mockResp.Usage.InputTokens,
-				ResponseTokens: mockResp.Usage.OutputTokens,
-				TotalTokens:    mockResp.Usage.InputTokens + mockResp.Usage.OutputTokens,
-			},
-			Price: common.Price{
-				InputCost:  0.0001,
-				OutputCost: 0.0002,
-				TotalCost:  0.0003,
-				Currency:   "USD",
-			},
-			Duration:  10 * time.Millisecond,
-			Timestamp: time.Now(),
-			Model:     model,
-			Provider:  w.GetProviderName(),
-		}, nil
-	}
-
 	// Extract token usage from the response
 	tokenUsage, err := w.ExtractTokenUsageFromResponse(response)
 	if err != nil {

@@ -9,25 +9,6 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-// MockOpenAIResponse is a mock response structure for testing
-type MockOpenAIResponse struct {
-	ID               string `json:"id"`
-	Object           string `json:"object"`
-	Model            string `json:"model"`
-	SystemFingerprint string `json:"system_fingerprint"`
-	Choices []struct {
-		Message struct {
-			Role    string `json:"role"`
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
-	Usage struct {
-		PromptTokens     int `json:"prompt_tokens"`
-		CompletionTokens int `json:"completion_tokens"`
-		TotalTokens      int `json:"total_tokens"`
-	} `json:"usage"`
-}
-
 // OpenAI model constants
 const (
 	GPT35Turbo    = "gpt-3.5-turbo"
@@ -76,25 +57,43 @@ func (w *OpenAISDKWrapper) GetSupportedModels() ([]string, error) {
 
 // ExtractTokenUsageFromResponse extracts token usage from an OpenAI API response
 func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (common.TokenUsage, error) {
-	// Check if we have a mock response (for testing)
-	if mockResp, ok := response.(*MockOpenAIResponse); ok {
-		return common.TokenUsage{
-			InputTokens:    mockResp.Usage.PromptTokens,
-			OutputTokens:   mockResp.Usage.CompletionTokens,
-			TotalTokens:    mockResp.Usage.TotalTokens,
-			CompletionID:   mockResp.ID,
-			Model:          mockResp.Model,
-			Timestamp:      time.Now(),
-			PromptTokens:   mockResp.Usage.PromptTokens,
-			ResponseTokens: mockResp.Usage.CompletionTokens,
-			RequestID:      mockResp.SystemFingerprint,
-		}, nil
+	// Try type assertion to see if this is a map (used for mocks in tests)
+	if respMap, ok := response.(map[string]interface{}); ok {
+		// Check for expected structure in mock responses
+		if id, hasID := respMap["id"].(string); hasID {
+			if model, hasModel := respMap["model"].(string); hasModel {
+				if usage, hasUsage := respMap["usage"].(map[string]interface{}); hasUsage {
+					if promptTokens, hasPrompt := usage["prompt_tokens"].(float64); hasPrompt {
+						if completionTokens, hasCompletion := usage["completion_tokens"].(float64); hasCompletion {
+							if totalTokens, hasTotal := usage["total_tokens"].(float64); hasTotal {
+								var systemFingerprint string
+								if sf, hasSF := respMap["system_fingerprint"].(string); hasSF {
+									systemFingerprint = sf
+								}
+								
+								return common.TokenUsage{
+									InputTokens:    int(promptTokens),
+									OutputTokens:   int(completionTokens),
+									TotalTokens:    int(totalTokens),
+									CompletionID:   id,
+									Model:          model,
+									Timestamp:      time.Now(),
+									PromptTokens:   int(promptTokens),
+									ResponseTokens: int(completionTokens),
+									RequestID:      systemFingerprint,
+								}, nil
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Try to cast the response to *openai.ChatCompletion
 	resp, ok := response.(*openai.ChatCompletion)
 	if !ok {
-		return common.TokenUsage{}, fmt.Errorf("response is not a *openai.ChatCompletion: %T", response)
+		return common.TokenUsage{}, fmt.Errorf("response is not a *openai.ChatCompletion or valid mock: %T", response)
 	}
 
 	// Extract token usage information
@@ -105,9 +104,9 @@ func (w *OpenAISDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 		CompletionID:   resp.ID,
 		Model:          resp.Model,
 		Timestamp:      time.Now(),
-		PromptTokens:   int(resp.Usage.PromptTokens),     // Same as InputTokens for OpenAI
-		ResponseTokens: int(resp.Usage.CompletionTokens), // Same as OutputTokens for OpenAI
-		RequestID:      resp.SystemFingerprint,           // OpenAI uses SystemFingerprint as a request ID
+		PromptTokens:   int(resp.Usage.PromptTokens),
+		ResponseTokens: int(resp.Usage.CompletionTokens),
+		RequestID:      resp.SystemFingerprint,
 	}
 
 	return usage, nil
@@ -157,28 +156,6 @@ func (w *OpenAISDKWrapper) UpdateProviderPricing() error {
 
 // TrackAPICall tracks an API call and returns usage metrics
 func (w *OpenAISDKWrapper) TrackAPICall(model string, response interface{}) (common.UsageMetrics, error) {
-	// Handle special case for mock responses in tests
-	if mockResp, ok := response.(*MockOpenAIResponse); ok {
-		// For mocks, create simplified metrics
-		return common.UsageMetrics{
-			TokenCount: common.TokenCount{
-				InputTokens:    mockResp.Usage.PromptTokens,
-				ResponseTokens: mockResp.Usage.CompletionTokens,
-				TotalTokens:    mockResp.Usage.TotalTokens,
-			},
-			Price: common.Price{
-				InputCost:  0.0001,
-				OutputCost: 0.0002,
-				TotalCost:  0.0003,
-				Currency:   "USD",
-			},
-			Duration:  10 * time.Millisecond,
-			Timestamp: time.Now(),
-			Model:     model,
-			Provider:  w.GetProviderName(),
-		}, nil
-	}
-
 	// Extract token usage from the response
 	tokenUsage, err := w.ExtractTokenUsageFromResponse(response)
 	if err != nil {

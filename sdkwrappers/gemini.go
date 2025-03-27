@@ -10,15 +10,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-// MockGeminiResponse is a mock response structure for testing
-type MockGeminiResponse struct {
-	UsageMetadata struct {
-		PromptTokenCount     int `json:"promptTokenCount"`
-		CandidatesTokenCount int `json:"candidatesTokenCount"`
-		TotalTokenCount      int `json:"totalTokenCount"`
-	} `json:"usageMetadata"`
-}
-
 // Gemini model constants
 const (
 	GeminiPro    = "gemini-pro"
@@ -69,22 +60,31 @@ func (w *GeminiSDKWrapper) GetSupportedModels() ([]string, error) {
 
 // ExtractTokenUsageFromResponse extracts token usage from a Gemini API response
 func (w *GeminiSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (common.TokenUsage, error) {
-	// Check if we have a mock response (for testing)
-	if mockResp, ok := response.(*MockGeminiResponse); ok {
-		return common.TokenUsage{
-			InputTokens:    mockResp.UsageMetadata.PromptTokenCount,
-			OutputTokens:   mockResp.UsageMetadata.CandidatesTokenCount,
-			TotalTokens:    mockResp.UsageMetadata.TotalTokenCount,
-			Timestamp:      time.Now(),
-			PromptTokens:   mockResp.UsageMetadata.PromptTokenCount,
-			ResponseTokens: mockResp.UsageMetadata.CandidatesTokenCount,
-		}, nil
+	// Try type assertion to see if this is a map (used for mocks in tests)
+	if respMap, ok := response.(map[string]interface{}); ok {
+		// Check for expected structure in mock responses for UsageMetadata
+		if usageMetadata, hasUsage := respMap["usageMetadata"].(map[string]interface{}); hasUsage {
+			if promptTokens, hasPrompt := usageMetadata["promptTokenCount"].(float64); hasPrompt {
+				if candidatesTokens, hasCandidates := usageMetadata["candidatesTokenCount"].(float64); hasCandidates {
+					if totalTokens, hasTotal := usageMetadata["totalTokenCount"].(float64); hasTotal {
+						return common.TokenUsage{
+							InputTokens:    int(promptTokens),
+							OutputTokens:   int(candidatesTokens),
+							TotalTokens:    int(totalTokens),
+							Timestamp:      time.Now(),
+							PromptTokens:   int(promptTokens),
+							ResponseTokens: int(candidatesTokens),
+						}, nil
+					}
+				}
+			}
+		}
 	}
 
 	// Try to cast the response to *genai.GenerateContentResponse
 	resp, ok := response.(*genai.GenerateContentResponse)
 	if !ok {
-		return common.TokenUsage{}, fmt.Errorf("response is not a *genai.GenerateContentResponse: %T", response)
+		return common.TokenUsage{}, fmt.Errorf("response is not a *genai.GenerateContentResponse or valid mock: %T", response)
 	}
 
 	// Check if usage metadata is available
@@ -101,11 +101,6 @@ func (w *GeminiSDKWrapper) ExtractTokenUsageFromResponse(response interface{}) (
 		PromptTokens:   int(resp.UsageMetadata.PromptTokenCount),
 		ResponseTokens: int(resp.UsageMetadata.CandidatesTokenCount),
 	}
-
-	// Set model if available from candidates
-	// The model information might not be directly available in the response
-	// so we're not setting it here. In a future update, if the SDK provides
-	// this information, we can extract it.
 
 	return usage, nil
 }
@@ -149,28 +144,6 @@ func (w *GeminiSDKWrapper) UpdateProviderPricing() error {
 
 // TrackAPICall tracks an API call and returns usage metrics
 func (w *GeminiSDKWrapper) TrackAPICall(model string, response interface{}) (common.UsageMetrics, error) {
-	// Handle special case for mock responses in tests
-	if mockResp, ok := response.(*MockGeminiResponse); ok {
-		// For mocks, create simplified metrics
-		return common.UsageMetrics{
-			TokenCount: common.TokenCount{
-				InputTokens:    mockResp.UsageMetadata.PromptTokenCount,
-				ResponseTokens: mockResp.UsageMetadata.CandidatesTokenCount,
-				TotalTokens:    mockResp.UsageMetadata.TotalTokenCount,
-			},
-			Price: common.Price{
-				InputCost:  0.0001,
-				OutputCost: 0.0002,
-				TotalCost:  0.0003,
-				Currency:   "USD",
-			},
-			Duration:  10 * time.Millisecond,
-			Timestamp: time.Now(),
-			Model:     model,
-			Provider:  w.GetProviderName(),
-		}, nil
-	}
-
 	// Extract token usage from the response
 	tokenUsage, err := w.ExtractTokenUsageFromResponse(response)
 	if err != nil {

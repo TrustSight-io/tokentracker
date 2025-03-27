@@ -8,15 +8,6 @@ import (
 	"github.com/TrustSight-io/tokentracker"
 )
 
-// MockGeminiResponse is a mock response structure for testing
-type MockGeminiResponse struct {
-	UsageMetadata struct {
-		PromptTokenCount     int `json:"promptTokenCount"`
-		CandidatesTokenCount int `json:"candidatesTokenCount"`
-		TotalTokenCount      int `json:"totalTokenCount"`
-	} `json:"usageMetadata"`
-}
-
 // GeminiProvider implements the Provider interface for Gemini models
 type GeminiProvider struct {
 	config *tokentracker.Config
@@ -201,14 +192,24 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 	
 	// First, try to cast to map[string]interface{} which is common for JSON responses
 	if respMap, ok := response.(map[string]interface{}); ok {
-		// Case 1: Check for usage key at top level
+		// Check for usage key at top level
 		if usage, ok := respMap["usage"].(map[string]interface{}); ok {
 			// Extract token counts
 			promptTokens, ok1 := usage["prompt_tokens"].(float64)
 			completionTokens, ok2 := usage["completion_tokens"].(float64)
-			totalTokens, ok3 := usage["total_tokens"].(float64)
-
-			if ok1 && ok2 && ok3 {
+			
+			// If we have both prompt and completion tokens
+			if ok1 && ok2 {
+				totalTokens := promptTokens + completionTokens
+				return tokentracker.TokenCount{
+					InputTokens:    int(promptTokens),
+					ResponseTokens: int(completionTokens),
+					TotalTokens:    int(totalTokens),
+				}, nil
+			}
+			
+			// If we have total_tokens explicitly provided
+			if totalTokens, ok3 := usage["total_tokens"].(float64); ok1 && ok2 && ok3 {
 				return tokentracker.TokenCount{
 					InputTokens:    int(promptTokens),
 					ResponseTokens: int(completionTokens),
@@ -217,7 +218,7 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 			}
 		}
 		
-		// Case 2: Check for usageMetadata structure
+		// Check for usageMetadata structure
 		if usageMetadata, ok := respMap["usageMetadata"].(map[string]interface{}); ok {
 			promptTokens, ok1 := usageMetadata["promptTokenCount"].(float64)
 			candidatesTokens, ok2 := usageMetadata["candidatesTokenCount"].(float64)
@@ -233,15 +234,6 @@ func (p *GeminiProvider) ExtractTokenUsageFromResponse(response interface{}) (to
 		}
 	}
 	
-	// Mock response for testing
-	if _, ok := response.(*MockGeminiResponse); ok {
-		return tokentracker.TokenCount{
-			InputTokens:    100,
-			ResponseTokens: 50,
-			TotalTokens:    150,
-		}, nil
-	}
-
 	return tokentracker.TokenCount{}, tokentracker.NewError(tokentracker.ErrInvalidParams, "token counts not found in response", nil)
 }
 
