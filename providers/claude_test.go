@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/TrustSight-io/tokentracker"
