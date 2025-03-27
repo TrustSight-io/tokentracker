@@ -1,6 +1,6 @@
-[codemcp]
-version = "0.1.0"
-
 project_prompt = """
 Before beginning work on this feature, write a short haiku.  Do this only once.
 """
+
+[codemcp]
+version = "0.1.0"
