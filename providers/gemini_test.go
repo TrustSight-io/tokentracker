@@ -69,7 +69,7 @@ func TestGeminiProvider_CountTokens(t *testing.T) {
 		{
 			name: "Empty model",
 			params: tokentracker.TokenCountParams{
-				Text: stringPtr("Test text"),
+				Text: StringPtr("Test text"),
 			},
 			wantErr: true,
 		},
@@ -77,7 +77,7 @@ func TestGeminiProvider_CountTokens(t *testing.T) {
 			name: "Simple text",
 			params: tokentracker.TokenCountParams{
 				Model: "gemini-pro",
-				Text:  stringPtr("This is a simple test text for Gemini tokenization."),
+				Text:  StringPtr("This is a simple test text for Gemini tokenization."),
 			},
 			wantErr:     false,
 			minExpected: 5,
@@ -113,7 +113,7 @@ func TestGeminiProvider_CountTokens(t *testing.T) {
 			name: "With response tokens estimation",
 			params: tokentracker.TokenCountParams{
 				Model:              "gemini-ultra",
-				Text:               stringPtr("Estimate response tokens"),
+				Text:               StringPtr("Estimate response tokens"),
 				CountResponseTokens: true,
 			},
 			wantErr:     false,

@@ -74,7 +74,7 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 		{
 			name: "Empty model",
 			params: tokentracker.TokenCountParams{
-				Text: stringPtr("Test text"),
+				Text: StringPtr("Test text"),
 			},
 			wantErr: true,
 		},
@@ -82,7 +82,7 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 			name: "Simple text",
 			params: tokentracker.TokenCountParams{
 				Model: "claude-3-haiku",
-				Text:  stringPtr("This is a simple test text for Claude tokenization."),
+				Text:  StringPtr("This is a simple test text for Claude tokenization."),
 			},
 			wantErr:     false,
 			minExpected: 5,
@@ -118,7 +118,7 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 			name: "With tools",
 			params: tokentracker.TokenCountParams{
 				Model: "claude-3-opus",
-				Text:  stringPtr("Test with tools"),
+				Text:  StringPtr("Test with tools"),
 				Tools: []tokentracker.Tool{
 					{
 						Type: "function",
@@ -137,7 +137,7 @@ func TestClaudeProvider_CountTokens(t *testing.T) {
 			name: "With response tokens estimation",
 			params: tokentracker.TokenCountParams{
 				Model:              "claude-3-sonnet",
-				Text:               stringPtr("Estimate response tokens"),
+				Text:               StringPtr("Estimate response tokens"),
 				CountResponseTokens: true,
 			},
 			wantErr:     false,
@@ -441,9 +441,4 @@ func TestClaudeProvider_UpdatePricing(t *testing.T) {
 			t.Errorf("UpdatePricing() Currency = %v, expected USD", pricing.Currency)
 		}
 	}
-}
-
-// Helper function to create a string pointer
-func stringPtr(s string) *string {
-	return &s
 }

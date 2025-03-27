@@ -83,7 +83,8 @@ type MockOpenAIResponse struct {
 
 func TestOpenAISDKWrapper_GetProviderName(t *testing.T) {
 	provider := &MockOpenAIProvider{name: "openai", supports: true}
-	wrapper := NewOpenAISDKWrapper("test-api-key", provider)
+	// Skip actual client creation in tests
+	wrapper := &OpenAISDKWrapper{}
 
 	if wrapper.GetProviderName() != "openai" {
 		t.Errorf("OpenAISDKWrapper.GetProviderName() = %q, expected %q", wrapper.GetProviderName(), "openai")
@@ -92,7 +93,8 @@ func TestOpenAISDKWrapper_GetProviderName(t *testing.T) {
 
 func TestOpenAISDKWrapper_GetClient(t *testing.T) {
 	provider := &MockOpenAIProvider{name: "openai", supports: true}
-	wrapper := NewOpenAISDKWrapper("test-api-key", provider)
+	// Skip actual client creation in tests
+	wrapper := &OpenAISDKWrapper{}
 
 	client := wrapper.GetClient()
 	if client == nil {
@@ -102,7 +104,8 @@ func TestOpenAISDKWrapper_GetClient(t *testing.T) {
 
 func TestOpenAISDKWrapper_GetSupportedModels(t *testing.T) {
 	provider := &MockOpenAIProvider{name: "openai", supports: true}
-	wrapper := NewOpenAISDKWrapper("test-api-key", provider)
+	// Skip actual client creation in tests
+	wrapper := &OpenAISDKWrapper{}
 
 	models, err := wrapper.GetSupportedModels()
 	if err != nil {
@@ -130,7 +133,8 @@ func TestOpenAISDKWrapper_GetSupportedModels(t *testing.T) {
 
 func TestOpenAISDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
 	provider := &MockOpenAIProvider{name: "openai", supports: true}
-	wrapper := NewOpenAISDKWrapper("test-api-key", provider)
+	// Skip actual client creation in tests
+	wrapper := &OpenAISDKWrapper{}
 
 	// Create a mock response
 	response := &MockOpenAIResponse{
@@ -186,7 +190,8 @@ func TestOpenAISDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
 
 func TestOpenAISDKWrapper_FetchCurrentPricing(t *testing.T) {
 	provider := &MockOpenAIProvider{name: "openai", supports: true}
-	wrapper := NewOpenAISDKWrapper("test-api-key", provider)
+	// Skip actual client creation in tests
+	wrapper := &OpenAISDKWrapper{}
 
 	pricing, err := wrapper.FetchCurrentPricing()
 	if err != nil {
@@ -222,7 +227,8 @@ func TestOpenAISDKWrapper_FetchCurrentPricing(t *testing.T) {
 
 func TestOpenAISDKWrapper_TrackAPICall(t *testing.T) {
 	provider := &MockOpenAIProvider{name: "openai", supports: true}
-	wrapper := NewOpenAISDKWrapper("test-api-key", provider)
+	// Skip actual client creation in tests
+	wrapper := &OpenAISDKWrapper{}
 
 	// Create a mock response
 	response := &MockOpenAIResponse{
@@ -285,7 +291,8 @@ func TestOpenAISDKWrapper_TrackAPICall(t *testing.T) {
 
 func TestOpenAISDKWrapper_UpdateProviderPricing(t *testing.T) {
 	provider := &MockOpenAIProvider{name: "openai", supports: true}
-	wrapper := NewOpenAISDKWrapper("test-api-key", provider)
+	// Skip actual client creation in tests
+	wrapper := &OpenAISDKWrapper{}
 
 	err := wrapper.UpdateProviderPricing()
 	if err != nil {

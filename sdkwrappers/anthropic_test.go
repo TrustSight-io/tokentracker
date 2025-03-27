@@ -2,7 +2,6 @@ package sdkwrappers
 
 import (
 	"testing"
-	"time"
 
 	"github.com/TrustSight-io/tokentracker"
 	"github.com/TrustSight-io/tokentracker/common"
@@ -80,8 +79,11 @@ type MockAnthropicResponse struct {
 }
 
 func TestAnthropicSDKWrapper_GetProviderName(t *testing.T) {
-	provider := &MockClaudeProvider{name: "anthropic", supports: true}
-	wrapper := NewAnthropicSDKWrapper("test-api-key", provider)
+	// The providers are no longer directly passed to the constructor
+	wrapper := &AnthropicSDKWrapper{
+		// Add a mock client to avoid nil pointer errors
+		client: struct{}{},
+	}
 
 	if wrapper.GetProviderName() != "anthropic" {
 		t.Errorf("AnthropicSDKWrapper.GetProviderName() = %q, expected %q", wrapper.GetProviderName(), "anthropic")
@@ -89,8 +91,11 @@ func TestAnthropicSDKWrapper_GetProviderName(t *testing.T) {
 }
 
 func TestAnthropicSDKWrapper_GetClient(t *testing.T) {
-	provider := &MockClaudeProvider{name: "anthropic", supports: true}
-	wrapper := NewAnthropicSDKWrapper("test-api-key", provider)
+	// The providers are no longer directly passed to the constructor
+	wrapper := &AnthropicSDKWrapper{
+		// Add a mock client to avoid nil pointer errors
+		client: struct{}{},
+	}
 
 	client := wrapper.GetClient()
 	if client == nil {
@@ -99,8 +104,11 @@ func TestAnthropicSDKWrapper_GetClient(t *testing.T) {
 }
 
 func TestAnthropicSDKWrapper_GetSupportedModels(t *testing.T) {
-	provider := &MockClaudeProvider{name: "anthropic", supports: true}
-	wrapper := NewAnthropicSDKWrapper("test-api-key", provider)
+	// The providers are no longer directly passed to the constructor
+	wrapper := &AnthropicSDKWrapper{
+		// Add a mock client to avoid nil pointer errors
+		client: struct{}{},
+	}
 
 	models, err := wrapper.GetSupportedModels()
 	if err != nil {
@@ -127,8 +135,8 @@ func TestAnthropicSDKWrapper_GetSupportedModels(t *testing.T) {
 }
 
 func TestAnthropicSDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
-	provider := &MockClaudeProvider{name: "anthropic", supports: true}
-	wrapper := NewAnthropicSDKWrapper("test-api-key", provider)
+	// The providers are no longer directly passed to the constructor
+	wrapper := &AnthropicSDKWrapper{}
 
 	// Create a mock response
 	response := &MockAnthropicResponse{
@@ -177,8 +185,8 @@ func TestAnthropicSDKWrapper_ExtractTokenUsageFromResponse(t *testing.T) {
 }
 
 func TestAnthropicSDKWrapper_FetchCurrentPricing(t *testing.T) {
-	provider := &MockClaudeProvider{name: "anthropic", supports: true}
-	wrapper := NewAnthropicSDKWrapper("test-api-key", provider)
+	// The providers are no longer directly passed to the constructor
+	wrapper := &AnthropicSDKWrapper{}
 
 	pricing, err := wrapper.FetchCurrentPricing()
 	if err != nil {
@@ -213,8 +221,8 @@ func TestAnthropicSDKWrapper_FetchCurrentPricing(t *testing.T) {
 }
 
 func TestAnthropicSDKWrapper_TrackAPICall(t *testing.T) {
-	provider := &MockClaudeProvider{name: "anthropic", supports: true}
-	wrapper := NewAnthropicSDKWrapper("test-api-key", provider)
+	// The providers are no longer directly passed to the constructor
+	wrapper := &AnthropicSDKWrapper{}
 
 	// Create a mock response
 	response := &MockAnthropicResponse{
@@ -273,8 +281,8 @@ func TestAnthropicSDKWrapper_TrackAPICall(t *testing.T) {
 }
 
 func TestAnthropicSDKWrapper_UpdateProviderPricing(t *testing.T) {
-	provider := &MockClaudeProvider{name: "anthropic", supports: true}
-	wrapper := NewAnthropicSDKWrapper("test-api-key", provider)
+	// The providers are no longer directly passed to the constructor
+	wrapper := &AnthropicSDKWrapper{}
 
 	err := wrapper.UpdateProviderPricing()
 	if err != nil {

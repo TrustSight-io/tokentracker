@@ -24,7 +24,7 @@ func TestOpenAIProvider_CountTokens(t *testing.T) {
 		{
 			name: "Empty model",
 			params: tokentracker.TokenCountParams{
-				Text: stringPtr("Test text"),
+				Text: StringPtr("Test text"),
 			},
 			wantErr: true,
 		},
@@ -32,7 +32,7 @@ func TestOpenAIProvider_CountTokens(t *testing.T) {
 			name: "Simple text",
 			params: tokentracker.TokenCountParams{
 				Model: "gpt-3.5-turbo",
-				Text:  stringPtr("This is a test."),
+				Text:  StringPtr("This is a test."),
 			},
 			wantMinTokens: 4,  // At least 4 tokens
 			wantMaxTokens: 10, // At most 10 tokens
@@ -42,7 +42,7 @@ func TestOpenAIProvider_CountTokens(t *testing.T) {
 			name: "Longer text",
 			params: tokentracker.TokenCountParams{
 				Model: "gpt-4",
-				Text:  stringPtr("This is a longer test text that should have more tokens than the previous example."),
+				Text:  StringPtr("This is a longer test text that should have more tokens than the previous example."),
 			},
 			wantMinTokens: 10, // At least 10 tokens
 			wantMaxTokens: 25, // At most 25 tokens
@@ -161,9 +161,4 @@ func TestOpenAIProvider_CalculatePrice(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Helper function to create a string pointer
-func stringPtr(s string) *string {
-	return &s
 }
